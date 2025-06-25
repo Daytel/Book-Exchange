@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`User` (
   `Email` VARCHAR(50) NOT NULL COMMENT 'Обязан содержать @',
   `UserName` VARCHAR(20) NOT NULL COMMENT 'без спецсимволов',
   `Password` VARCHAR(15) NOT NULL COMMENT 'от 8 символов, с 1 заглавной буквой, 1 цифрой, без спецсимволов',
-  `Rating` INT NOT NULL DEFAULT 0,
+  `Rating` DOUBLE NOT NULL DEFAULT 0,
   `CreatedAt` DATETIME NOT NULL,
   `Enabled` TINYINT NOT NULL DEFAULT 1 COMMENT '0 при бане',
   `Avatar` BLOB NULL COMMENT 'Фото пользователя',
