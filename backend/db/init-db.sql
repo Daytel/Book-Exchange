@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS `mydb`.`BookLiterary` (
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
-
+ALTER TABLE `mydb`.`BookLiterary`
+MODIFY COLUMN `ISBN` VARCHAR(17) NULL;
 
 -- -----------------------------------------------------
 -- Table `mydb`.`Status`
@@ -296,7 +297,6 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Category` (
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
-
 
 -- -----------------------------------------------------
 -- Table `mydb`.`BookResponse`
