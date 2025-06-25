@@ -169,33 +169,6 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`BookResponse`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`BookResponse` (
-  `IdBookResponse` INT NOT NULL AUTO_INCREMENT,
-  `IdBookLiterary` INT NOT NULL,
-  `IdUser` INT NOT NULL,
-  `CreateAt` DATETIME NOT NULL,
-  `Response` VARCHAR(500) NOT NULL COMMENT 'Кирилица, кавычки, знаки препинания',
-  `Note` VARCHAR(50) NULL,
-  PRIMARY KEY (`IdBookResponse`),
-  INDEX `fk_BookResponse_BookLiterary1_idx` (`IdBookLiterary` ASC) VISIBLE,
-  INDEX `fk_BookResponse_User1_idx` (`IdUser` ASC) VISIBLE,
-  UNIQUE INDEX `IdBookResponse_UNIQUE` (`IdBookResponse` ASC) VISIBLE,
-  CONSTRAINT `fk_BookResponse_BookLiterary1`
-    FOREIGN KEY (`IdBookLiterary`)
-    REFERENCES `mydb`.`BookLiterary` (`IdBookLiterary`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_BookResponse_User1`
-    FOREIGN KEY (`IdUser`)
-    REFERENCES `mydb`.`User` (`IdUser`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `mydb`.`UserMsg`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`UserMsg` (
@@ -268,22 +241,15 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`UserExchangeList` (
   `IdUserExchangeList` INT NOT NULL AUTO_INCREMENT,
-  `IdExchangeList` INT NOT NULL,
   `IdOfferList` INT NOT NULL,
   `TrackNumber` VARCHAR(14) NULL COMMENT 'Код с \"Почты России\", возможно тире',
   `Receiving` TINYINT NOT NULL COMMENT '0 - книга не получена\n1 - книга получена',
   PRIMARY KEY (`IdUserExchangeList`),
   UNIQUE INDEX `IdUserExchangeList_UNIQUE` (`IdUserExchangeList` ASC) VISIBLE,
   INDEX `fk_UserExchangeList_OfferList1_idx` (`IdOfferList` ASC) VISIBLE,
-  INDEX `fk_UserExchangeList_ExchangeList1_idx` (`IdExchangeList` ASC) VISIBLE,
   CONSTRAINT `fk_UserExchangeList_OfferList1`
     FOREIGN KEY (`IdOfferList`)
     REFERENCES `mydb`.`OfferList` (`IdOfferList`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_UserExchangeList_ExchangeList1`
-    FOREIGN KEY (`IdExchangeList`)
-    REFERENCES `mydb`.`ExchangeList` (`IdExchangeList`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -333,23 +299,46 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `mydb`.`BookResponse`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`BookResponse` (
+  `IdBookLiterary` INT NOT NULL,
+  `IdUser` INT NOT NULL,
+  `CreateAt` DATETIME NOT NULL,
+  `Response` VARCHAR(500) NOT NULL COMMENT 'Кирилица, возможны кавычки и знаки препинания',
+  `Note` VARCHAR(50) NULL,
+  PRIMARY KEY (`IdBookLiterary`, `IdUser`),
+  INDEX `fk_BookLiterary_has_User_User1_idx` (`IdUser` ASC) VISIBLE,
+  INDEX `fk_BookLiterary_has_User_BookLiterary1_idx` (`IdBookLiterary` ASC) VISIBLE,
+  CONSTRAINT `fk_BookLiterary_has_User_BookLiterary1`
+    FOREIGN KEY (`IdBookLiterary`)
+    REFERENCES `mydb`.`BookLiterary` (`IdBookLiterary`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_BookLiterary_has_User_User1`
+    FOREIGN KEY (`IdUser`)
+    REFERENCES `mydb`.`User` (`IdUser`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `mydb`.`UserValueCategory`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`UserValueCategory` (
-  `IdUserValueCategory` INT NOT NULL AUTO_INCREMENT,
   `IdUserList` INT NOT NULL,
-  `Category_IdCategory` INT NOT NULL,
-  PRIMARY KEY (`IdUserValueCategory`),
-  UNIQUE INDEX `IdUserValueCategory_UNIQUE` (`IdUserValueCategory` ASC) VISIBLE,
-  INDEX `fk_UserValueCategory_UserList1_idx` (`IdUserList` ASC) VISIBLE,
-  INDEX `fk_UserValueCategory_Category1_idx` (`Category_IdCategory` ASC) VISIBLE,
-  CONSTRAINT `fk_UserValueCategory_UserList1`
+  `IdCategory` INT NOT NULL,
+  PRIMARY KEY (`IdUserList`, `IdCategory`),
+  INDEX `fk_UserList_has_Category_Category1_idx` (`IdCategory` ASC) VISIBLE,
+  INDEX `fk_UserList_has_Category_UserList1_idx` (`IdUserList` ASC) VISIBLE,
+  CONSTRAINT `fk_UserList_has_Category_UserList1`
     FOREIGN KEY (`IdUserList`)
     REFERENCES `mydb`.`UserList` (`IdUserList`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_UserValueCategory_Category1`
-    FOREIGN KEY (`Category_IdCategory`)
+  CONSTRAINT `fk_UserList_has_Category_Category1`
+    FOREIGN KEY (`IdCategory`)
     REFERENCES `mydb`.`Category` (`IdCategory`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
