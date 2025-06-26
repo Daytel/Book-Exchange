@@ -15,7 +15,7 @@ import { FeedbackComponent } from '../pages/feedback/feedback.component';
 
 const routes: Routes = [
   {path: '', component: MainPageComponent},
-  {path: 'auth', component: AuthorizationComponent}, // Регистрация и авторизация
+  {path: 'auth/:mode', component: AuthorizationComponent}, // Регистрация и авторизация
   {path: 'check-email', component: CheckEmailComponent}, // Отправка письма подтверждения
   {path: 'verify-email', component: VerifyEmailComponent}, // Ручка обработки подтверждения авторизации
   {path: 'my-exchange', component: MyExchangeComponent}, // ЛК

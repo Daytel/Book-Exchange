@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`BookLiterary` (
   `IdAutor` INT NOT NULL,
   `BookName` VARCHAR(50) NOT NULL,
   `Note` VARCHAR(50) NULL,
-  `ISBN` VARCHAR(13) NULL,
+  `ISBN` VARCHAR(17) NULL,
   `YearPublishing` DATE NOT NULL COMMENT '4 цифры года',
   PRIMARY KEY (`IdBookLiterary`),
   UNIQUE INDEX `IdBookLiterary_UNIQUE` (`IdBookLiterary` ASC) VISIBLE,
@@ -66,8 +66,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`BookLiterary` (
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
-ALTER TABLE `mydb`.`BookLiterary`
-MODIFY COLUMN `ISBN` VARCHAR(17) NULL;
+
 
 -- -----------------------------------------------------
 -- Table `mydb`.`Status`
@@ -281,24 +280,6 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`Category`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `mydb`.`Category` (
-  `IdCategory` INT NOT NULL AUTO_INCREMENT,
-  `Name` VARCHAR(25) NOT NULL COMMENT 'Кирилица',
-  `IdParent` INT NOT NULL DEFAULT 0 COMMENT '0 если нет родителя, иначе ID родителя',
-  `MultySelect` TINYINT NOT NULL DEFAULT 0 COMMENT 'если у дочерней вершины данное поле - 1, то значение 1',
-  PRIMARY KEY (`IdCategory`),
-  UNIQUE INDEX `IdCategory_UNIQUE` (`IdCategory` ASC) VISIBLE,
-  INDEX `fk_Category_Category1_idx` (`IdParent` ASC) VISIBLE,
-  CONSTRAINT `fk_Category_Category1`
-    FOREIGN KEY (`IdParent`)
-    REFERENCES `mydb`.`Category` (`IdCategory`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
--- -----------------------------------------------------
 -- Table `mydb`.`BookResponse`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`BookResponse` (
@@ -324,22 +305,52 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `mydb`.`Category`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`Category` (
+  `IdCategory` INT NOT NULL AUTO_INCREMENT,
+  `Value` VARCHAR(25) NOT NULL COMMENT 'Кирилица',
+  `MultySelect` TINYINT NOT NULL DEFAULT 0 COMMENT '0 - выбор одного из\n1 - выбор одного или несколько из',
+  PRIMARY KEY (`IdCategory`),
+  UNIQUE INDEX `idCategory_UNIQUE` (`IdCategory` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`ValueCategory`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`ValueCategory` (
+  `IdValueCategory` INT NOT NULL AUTO_INCREMENT,
+  `Value` VARCHAR(25) NOT NULL COMMENT 'Кирилица',
+  `IdCategory` INT NOT NULL,
+  PRIMARY KEY (`IdValueCategory`),
+  UNIQUE INDEX `idCategoryValue_UNIQUE` (`IdValueCategory` ASC) VISIBLE,
+  INDEX `fk_ValueCategory_Category1_idx` (`IdCategory` ASC) VISIBLE,
+  CONSTRAINT `fk_ValueCategory_Category1`
+    FOREIGN KEY (`IdCategory`)
+    REFERENCES `mydb`.`Category` (`IdCategory`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `mydb`.`UserValueCategory`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`UserValueCategory` (
   `IdUserList` INT NOT NULL,
-  `IdCategory` INT NOT NULL,
-  PRIMARY KEY (`IdUserList`, `IdCategory`),
-  INDEX `fk_UserList_has_Category_Category1_idx` (`IdCategory` ASC) VISIBLE,
-  INDEX `fk_UserList_has_Category_UserList1_idx` (`IdUserList` ASC) VISIBLE,
-  CONSTRAINT `fk_UserList_has_Category_UserList1`
+  `IdValueCategory` INT NOT NULL,
+  PRIMARY KEY (`IdUserList`, `IdValueCategory`),
+  INDEX `fk_UserList_has_CategoryValue_CategoryValue1_idx` (`IdValueCategory` ASC) VISIBLE,
+  INDEX `fk_UserList_has_CategoryValue_UserList1_idx` (`IdUserList` ASC) VISIBLE,
+  CONSTRAINT `fk_UserList_has_CategoryValue_UserList1`
     FOREIGN KEY (`IdUserList`)
     REFERENCES `mydb`.`UserList` (`IdUserList`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_UserList_has_Category_Category1`
-    FOREIGN KEY (`IdCategory`)
-    REFERENCES `mydb`.`Category` (`IdCategory`)
+  CONSTRAINT `fk_UserList_has_CategoryValue_CategoryValue1`
+    FOREIGN KEY (`IdValueCategory`)
+    REFERENCES `mydb`.`ValueCategory` (`IdValueCategory`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
