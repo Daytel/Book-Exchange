@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -47,3 +47,52 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# 🚀 ЗАПОЛНЕНИЕ БАЗЫ ПРИ ЗАПУСКЕ
+def populate_database():
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    test_data_path = os.path.join(BASE_DIR, "db", "test_data.sql")
+
+    if not os.path.exists(test_data_path):
+        print(f"Файл не найден: {test_data_path}")
+        return
+
+    print("📥 Заполнение базы данных из test_data.sql...")
+    with open(test_data_path, encoding="utf-8") as f:
+        sql_commands = f.read()
+
+    with engine.connect() as conn:
+        for command in sql_commands.split(';'):
+            command = command.strip()
+            if command:
+                try:
+                    conn.execute(text(command))
+                except Exception as e:
+                    print(f"⚠️ Ошибка при выполнении SQL:\n{command[:100]}...\n{e}")
+        conn.commit()
+    print("✅ База данных успешно заполнена.")
+
+def clear_database():
+    print("⚠️ Очистка базы данных...")
+    with engine.connect() as conn:
+        trans = conn.begin()
+        try:
+            conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+            for table in reversed(Base.metadata.sorted_tables):
+                conn.execute(text(f"TRUNCATE TABLE `{table.name}`"))
+            conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+            trans.commit()
+            print("✅ Все таблицы успешно очищены.")
+        except Exception as e:
+            trans.rollback()
+            print(f"❌ Ошибка при очистке: {e}")
+
+if __name__ == "__main__":
+    import sys
+
+    if "clear" in sys.argv:
+        clear_database()
+    elif "populate" in sys.argv:
+        populate_database()
+    else:
+        print("ℹ️ Используй: python database.py [clear | populate]")

@@ -7,7 +7,7 @@ import secrets
 from pydantic import BaseModel
 
 from app import models
-from .database import engine, Base
+from .database import engine, Base, populate_database
 # Добавить написанные routes
 # from .routes import students, tasks, classes, journal, gamefields, solutions
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +17,12 @@ import os
 
 Base.metadata.create_all(bind=engine)
 
+# Запуск: uvicorn app.main:app --reload
+# Чистка: python app/database.py clear
+
 app = FastAPI()
+
+populate_database()
 
 @app.get("/")
 def read_root():
@@ -29,3 +34,4 @@ def read_root():
 @app.get('/')
 def read_root():
     return {'message': 'Обмен книгами API'}
+
