@@ -6,7 +6,7 @@ import re
 # Специальный тип для пароля
 PasswordStr = Annotated[
     str,
-    Field(..., min_length=8, max_length=15, pattern=r'^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]+$')
+    Field(..., min_length=8, max_length=15)
 ]
 
 # --------------- User Schemas ---------------
@@ -25,12 +25,15 @@ class UserBase(BaseModel):
     
     @field_validator('Password')
     def validate_password(cls, v):
-        if not re.search(r'[A-Z]', v):
+        # Проверяем наличие заглавной буквы (латиница или кириллица)
+        if not re.search(r'[A-ZА-Я]', v):
             raise ValueError('Password must contain at least one uppercase letter')
+        # Проверяем наличие цифры
         if not re.search(r'\d', v):
             raise ValueError('Password must contain at least one digit')
-        if re.search(r'[^a-zA-Z0-9]', v):
-            raise ValueError('Password must not contain special characters')
+        # Проверяем, что пароль содержит только буквы и цифры (латиница и кириллица)
+        if re.search(r'[^a-zA-Zа-яёЁ0-9]', v):
+            raise ValueError('Password must contain only letters and digits')
         return v
 
 class UserCreate(UserBase):
@@ -225,3 +228,17 @@ class UserValueCategoryCreate(UserValueCategoryBase):
 
 class UserValueCategoryResponse(UserValueCategoryBase):
     model_config = ConfigDict(from_attributes=True)
+
+# --------------- Sessions ---------------
+class SessionCreate(BaseModel):
+    UserId: int
+
+class SessionResponse(BaseModel):
+    IdSession: int
+    SessionToken: str
+    UserId: int
+    CreatedAt: datetime
+    ExpiresAt: datetime
+    
+    class Config:
+        from_attributes = True
