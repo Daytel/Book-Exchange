@@ -1,1 +1,157 @@
-<p>admin-panel works!</p>
+<div class="container">
+  <header>
+    <nav>
+      <a href="#">Главная</a>
+    </nav>
+    <div class="user-info">
+      <img src="path/to/admin-icon.png" alt="Admin Icon">
+      <span>Администратор</span>
+      <span class="role">ADMIN</span>
+      <button (click)="logout()">Выход</button>
+    </div>
+  </header>
+
+  <h1>Панель администратора</h1>
+
+  <div class="tabs">
+    <button>Словари данных</button>
+    <button>Сообщения пользователей</button>
+    <button>Управление пользователями</button>
+  </div>
+
+  <div class="content">
+    <div class="dictionaries">
+      <h2>Категории</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Название категории</th>
+            <th>Описание</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let category of categories">
+            <td>{{ category.id }}</td>
+            <td>{{ category.name }}</td>
+            <td>{{ category.description }}</td>
+            <td>
+              <button (click)="editCategory(category.id)">Редактировать</button>
+              <button (click)="deleteCategory(category.id)">Удалить</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button (click)="addCategory()">Добавить категорию</button>
+
+      <h2>Статусы</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Название статуса</th>
+            <th>Описание</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let status of statuses">
+            <td>{{ status.id }}</td>
+            <td>{{ status.name }}</td>
+            <td>{{ status.description }}</td>
+            <td>
+              <button (click)="editStatus(status.id)">Редактировать</button>
+              <button (click)="deleteStatus(status.id)">Удалить</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button (click)="addStatus()">Добавить статус</button>
+
+      <h2>Авторы</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>ФИО автора</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let author of authors">
+            <td>{{ author.id }}</td>
+            <td>{{ author.name }}</td>
+            <td>
+              <button (click)="editAuthor(author.id)">Редактировать</button>
+              <button (click)="deleteAuthor(author.id)">Удалить</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button (click)="addAuthor()">Добавить автора</button>
+
+      <h2>Книги</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Автор</th>
+            <th>Год издания</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let book of books">
+            <td>{{ book.id }}</td>
+            <td>{{ book.title }}</td>
+            <td>{{ book.author }}</td>
+            <td>{{ book.year }}</td>
+            <td>
+              <button (click)="editBook(book.id)">Редактировать</button>
+              <button (click)="deleteBook(book.id)">Удалить</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button (click)="addBook()">Добавить книгу</button>
+    </div>
+
+    <div class="user-management">
+      <h2>Управление пользователями</h2>
+      <select [(ngModel)]="selectedUser">
+        <option value="admin (я)">admin (я)</option>
+        <option *ngFor="let user of users" [value]="user.nickname">{{ user.nickname }}</option>
+      </select>
+      <input type="text" placeholder="Найти">
+      <button (click)="searchUsers()">Найти</button>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Никнейм</th>
+            <th>Email</th>
+            <th>Рейтинг</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>{{ user.id }}</td>
+            <td>{{ user.nickname }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.rating }}</td>
+            <td>{{ user.status }}</td>
+            <td>
+              <button *ngIf="user.status === 'Активен'" (click)="blockUser(user.id)">Заблокировать</button>
+              <button *ngIf="user.status === 'Заблокирован'" (click)="unblockUser(user.id)">Разблокировать</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
