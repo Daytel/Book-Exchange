@@ -1,0 +1,136 @@
+:root {
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.auth-container {
+    background-color: #fffcee;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+}
+
+.title {
+    margin: 1rem 0;
+    text-align: center;
+    font-weight: 700;
+    color: #333;
+}
+
+.toggle-mode {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.form {
+    margin-top: 2rem;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+    min-width: 600px;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form input {
+    outline: none;
+}
+
+.form input[type=text],
+.form input[type=email],
+.form input[type=password] {
+    padding: 1rem;
+    padding-bottom: 0.6rem;
+    width: 100%;
+    border: none;
+    border-bottom: 3px solid #000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    transition: border 0.3s ease;
+}
+
+.form button {
+    width: 60%;
+    margin: 0 auto;
+}
+
+.label {
+    position: absolute;
+    top: 1rem;
+    left: 0;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.form input:focus + .label,
+.form input:not(:placeholder-shown) + .label {
+    top: -0.2rem;
+    color: #be0027;
+    font-size: 0.8rem;
+}
+
+.form input:focus {
+    border-bottom: 3px solid #9fafc9;
+}
+
+.btn {
+    padding: 0.6rem 2rem;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.btn:hover {
+    opacity: 0.7;
+}
+
+.btn-submit {
+    color: #fff;
+    background-color: #c3d7f7;
+}
+
+.btn-toggle {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.btn-toggle.active {
+    background-color: #c3d7f7;
+    color: #fff;
+}
+
+.error {
+    color: #be0027;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+    text-align: left;
+    width: 100%;
+}

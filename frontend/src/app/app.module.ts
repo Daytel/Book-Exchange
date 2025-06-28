@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { RouterModule, Routes } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
 import { NotFoundErrorComponent } from '../pages/not-found-error/not-found-error.component';
 import { MainPageComponent } from '../pages/main-page/main-page.component';
@@ -38,7 +39,7 @@ const routes: Routes = [
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule,
+    AppRoutingModule, ReactiveFormsModule,
     RouterModule.forRoot(routes)
   ],
   providers: [],
