@@ -12,6 +12,7 @@ import { StartExchangeComponent } from 'src/pages/start-exchange/start-exchange.
 import { CheckEmailComponent } from 'src/pages/check-email/check-email.component';
 import { VerifyEmailComponent } from 'src/pages/verify-email/verify-email.component';
 import { FeedbackComponent } from '../pages/feedback/feedback.component';
+import { AdminPanelComponent } from 'src/pages/admin-panel/admin-panel.component';
 
 const routes: Routes = [
   {path: '', component: MainPageComponent},
@@ -21,6 +22,7 @@ const routes: Routes = [
   {path: 'my-exchange', component: MyExchangeComponent}, // ЛК
   {path: 'start-exchange', component: StartExchangeComponent}, // Страница обмена
   {path: 'feedback', component: FeedbackComponent}, // Обратная связь
+  {path: 'admin', component: AdminPanelComponent}, // Админка
   {path: '**', component: NotFoundErrorComponent} // Страница для ошибок
 ];
 
@@ -34,7 +36,8 @@ const routes: Routes = [
     MyExchangeComponent,
     StartExchangeComponent,
     FeedbackComponent,
-    NotFoundErrorComponent
+    NotFoundErrorComponent,
+    AdminPanelComponent
   ],
   imports: [
     BrowserModule,
