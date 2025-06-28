@@ -7,7 +7,8 @@ import secrets
 from pydantic import BaseModel
 
 from app import models
-from .database import engine, Base, populate_database
+from .auth_router import router as auth_router
+from .database import engine, Base, get_current_user, populate_database
 # Добавить написанные routes
 # from .routes import students, tasks, classes, journal, gamefields, solutions
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,23 +16,29 @@ from sqlalchemy.orm import Session
 from .database import get_db
 import os
 
-Base.metadata.create_all(bind=engine)
-
 # Запуск: uvicorn app.main:app --reload
 # Чистка: python app/database.py clear
 
 app = FastAPI()
 
+# Создаем таблицы и заполняем базу данных
+print("🚀 Инициализация базы данных...")
 populate_database()
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to Book Exchange API"}
+# Настройка CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Подключаем роутер аутентификации
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
-# Добавить routes
-
-@app.get('/')
-def read_root():
-    return {'message': 'Обмен книгами API'}
+# Пример защищенного роута
+@app.get("/protected-data")
+async def get_protected_data(current_user: models.User = Depends(get_current_user)):
+    return {"data": "Секретные данные", "user": current_user.Email}
 

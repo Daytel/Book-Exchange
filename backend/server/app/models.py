@@ -1,7 +1,9 @@
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, Boolean, Date, LargeBinary, Text, CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 import re
+from .auth_utils import get_password_hash, verify_password
 
 Base = declarative_base()
 
@@ -14,12 +16,21 @@ class User(Base):
     SecondName = Column(String(25))
     Email = Column(String(50), nullable=False)
     UserName = Column(String(20), nullable=False)
-    Password = Column(String(15), nullable=False)
+    Password = Column(String(255), nullable=False) # Изменил на 255 для хеша
     Rating = Column(Float, default=0.0)
     CreatedAt = Column(DateTime, nullable=False)
     Enabled = Column(Boolean, default=True)
     Avatar = Column(LargeBinary)
     IsStaff = Column(Boolean, default=False)
+
+    # Методы для работы с паролем
+    def set_password(self, password: str):
+        """Хеширует и устанавливает пароль"""
+        self.Password = get_password_hash(password)
+    
+    def check_password(self, password: str) -> bool:
+        """Проверяет пароль против хеша"""
+        return verify_password(password, self.Password)
     
     __table_args__ = (
         CheckConstraint('LENGTH(Password) >= 8', name='password_length'),
@@ -27,6 +38,7 @@ class User(Base):
         CheckConstraint('Password REGEXP "^.*[0-9].*$"', name='password_digit'),
         CheckConstraint('Email LIKE "%@%"', name='valid_email'),
     )
+    
 
 class Autor(Base):
     __tablename__ = 'Autor'
@@ -177,3 +189,15 @@ class UserValueCategory(Base):
     
     user_list = relationship("UserList")
     category = relationship("Category")
+
+class Session(Base):
+    __tablename__ = 'Session'
+    
+    IdSession = Column(Integer, primary_key=True, autoincrement=True)
+    SessionToken = Column(String(36), unique=True, nullable=False)
+    UserId = Column(Integer, ForeignKey('User.IdUser'), nullable=False)
+    CreatedAt = Column(DateTime, default=datetime.utcnow, nullable=False)
+    ExpiresAt = Column(DateTime, nullable=False)
+    
+    # Связь с пользователем
+    user = relationship("User")
