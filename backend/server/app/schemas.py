@@ -43,6 +43,31 @@ class UserResponse(UserBase):
     IdUser: int
     model_config = ConfigDict(from_attributes=True)
 
+# Схема для ответа авторизации (без пароля)
+class UserAuthResponse(BaseModel):
+    IdUser: int
+    FirstName: str
+    LastName: str
+    SecondName: Optional[str] = None
+    Email: str
+    UserName: str
+    Rating: float
+    CreatedAt: datetime
+    Enabled: bool
+    Avatar: Optional[bytes] = None
+    IsStaff: bool
+    model_config = ConfigDict(from_attributes=True)
+
+# Схема для ответа авторизации
+class LoginResponse(BaseModel):
+    message: str
+    user: UserAuthResponse
+
+# Схема для входа в систему
+class LoginRequest(BaseModel):
+    Email: EmailStr
+    Password: str
+
 # --------------- Autor Schemas ---------------
 class AutorBase(BaseModel):
     LastName: str

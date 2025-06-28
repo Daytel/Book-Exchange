@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
 from sqlalchemy.orm import Session
-from .schemas import UserCreate
+from .schemas import LoginRequest, LoginResponse, UserAuthResponse
 from .models import User, Session
 from .database import get_db
 from .auth_utils import SESSION_EXPIRE_HOURS, create_session_token, get_session_expiration
 
 router = APIRouter()
 
-@router.post("/login")
+@router.post("/login", response_model=LoginResponse)
 async def login(
     response: Response,
-    user_data: UserCreate,  # Используйте вашу схему аутентификации
+    user_data: LoginRequest,  # Используем схему для входа
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.Email == user_data.Email).first()
@@ -44,7 +44,25 @@ async def login(
         samesite="Lax"
     )
     
-    return {"message": "Успешная авторизация"}
+    # Создаем объект пользователя для ответа (без пароля)
+    user_response = UserAuthResponse(
+        IdUser=user.IdUser,
+        FirstName=user.FirstName,
+        LastName=user.LastName,
+        SecondName=user.SecondName,
+        Email=user.Email,
+        UserName=user.UserName,
+        Rating=user.Rating,
+        CreatedAt=user.CreatedAt,
+        Enabled=user.Enabled,
+        Avatar=user.Avatar,
+        IsStaff=user.IsStaff
+    )
+    
+    return LoginResponse(
+        message="Успешная авторизация",
+        user=user_response
+    )
 
 @router.post("/logout")
 async def logout(response: Response, request: Request, db: Session = Depends(get_db)):
@@ -95,3 +113,34 @@ async def refresh_session(response: Response, request: Request, db: Session = De
     )
     
     return {"message": "Сессия обновлена"}
+
+@router.get("/me", response_model=UserAuthResponse)
+async def get_current_user(request: Request, db: Session = Depends(get_db)):
+    """Получить информацию о текущем пользователе"""
+    session_token = request.cookies.get("session_token")
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Сессия не найдена")
+    
+    # Находим сессию
+    session = db.query(Session).filter(Session.SessionToken == session_token).first()
+    if not session:
+        raise HTTPException(status_code=401, detail="Недействительная сессия")
+    
+    # Получаем пользователя
+    user = db.query(User).filter(User.IdUser == session.UserId).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    return UserAuthResponse(
+        IdUser=user.IdUser,
+        FirstName=user.FirstName,
+        LastName=user.LastName,
+        SecondName=user.SecondName,
+        Email=user.Email,
+        UserName=user.UserName,
+        Rating=user.Rating,
+        CreatedAt=user.CreatedAt,
+        Enabled=user.Enabled,
+        Avatar=user.Avatar,
+        IsStaff=user.IsStaff
+    )
