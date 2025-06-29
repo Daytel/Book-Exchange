@@ -3,8 +3,9 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { RouterModule, Routes } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 import { NotFoundErrorComponent } from '../pages/not-found-error/not-found-error.component';
 import { MainPageComponent } from '../pages/main-page/main-page.component';
 import { AuthorizationComponent } from 'src/pages/authorization/authorization.component';
@@ -13,6 +14,9 @@ import { StartExchangeComponent } from 'src/pages/start-exchange/start-exchange.
 import { CheckEmailComponent } from 'src/pages/check-email/check-email.component';
 import { VerifyEmailComponent } from 'src/pages/verify-email/verify-email.component';
 import { FeedbackComponent } from '../pages/feedback/feedback.component';
+import { AuthService } from 'src/services/auth.service';
+import { AuthInterceptor } from 'src/services/auth.interceptor';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
 const routes: Routes = [
   {path: '', component: MainPageComponent},
@@ -39,10 +43,15 @@ const routes: Routes = [
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule, ReactiveFormsModule,
+    AppRoutingModule, ReactiveFormsModule, HttpClientModule,
     RouterModule.forRoot(routes)
   ],
-  providers: [],
+  providers: [ AuthService,
+          {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            multi: true
+        }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,6 +1,8 @@
 
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ValidationErrors, AbstractControl } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-authorization',
@@ -8,11 +10,19 @@ import { FormBuilder, FormGroup, Validators, ValidationErrors, AbstractControl }
     styleUrls: ['./authorization.component.css']
 })
 export class AuthorizationComponent implements OnInit {
+    // Определяем переменные
     mode: 'login' | 'register' = 'login';
     loginForm: FormGroup;
     registerForm: FormGroup;
+    errorMessage: string | null = null;
 
-    constructor(private fb: FormBuilder) {
+    constructor(
+        private fb: FormBuilder,
+        private route: ActivatedRoute,
+        private router: Router,
+        private authService: AuthService
+    ) {
+        // Инициализация форм с валидацией
         this.loginForm = this.fb.group({
             email: ['', [Validators.required, Validators.email]],
             password: ['', [Validators.required, Validators.maxLength(15)]]
@@ -29,9 +39,15 @@ export class AuthorizationComponent implements OnInit {
         }, { validators: this.passwordMatchValidator });
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        // Логика при отображении окна (например, проверка текущей сессии)
+        this.route.paramMap.subscribe(params => {
+            const modeParam = params.get('mode');
+            this.mode = modeParam === 'register' ? 'register' : 'login';
+            this.errorMessage = null; // Сбрасываем сообщение при переключении
+        });
+    }
 
-    // Валидатор для проверки совпадения паролей
     passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
         const password = control.get('password')?.value;
         const confirmPassword = control.get('confirmPassword')?.value;
@@ -40,19 +56,50 @@ export class AuthorizationComponent implements OnInit {
 
     setMode(mode: 'login' | 'register'): void {
         this.mode = mode;
+        this.errorMessage = null;
+        this.router.navigate(['/auth', mode]);
     }
 
     onLoginSubmit(): void {
         if (this.loginForm.valid) {
             console.log('Login data:', this.loginForm.value);
-            // TODO: Отправить данные на сервер для авторизации
+            const { email, password } = this.loginForm.value;
+            this.authService.login(email, password).subscribe({
+                next: (response: any) => {
+                    console.log('Logged in successfully', response);
+                    const user = response.user;
+                    const id = user.IdUser;
+                    const role = user.IsStaff ? 'admin' : 'user';
+                    this.authService.setUserData(id, role);
+                    const redirectUrl = role === 'admin' ? '/admin' : '/';
+                    this.router.navigate([redirectUrl]);
+                },
+                error: (err) => {
+                    console.error('Login failed', err);
+                    this.errorMessage = err.error?.detail || 'Неверный email или пароль';
+                }
+            });
         }
     }
 
     onRegisterSubmit(): void {
         if (this.registerForm.valid) {
             console.log('Register data:', this.registerForm.value);
-            // TODO: Отправить данные на сервер для регистрации
+            // Временно эмулируем регистрацию, так как эндпоинта нет
+            this.errorMessage = 'Регистрация временно недоступна';
+            // TODO: Реализовать запрос на /auth/register, когда эндпоинт будет добавлен
+            // Пример:
+            // const { firstName, lastName, secondName, email, userName, password } = this.registerForm.value;
+            // this.authService.register({ firstName, lastName, secondName, email, userName, password }).subscribe({
+            //     next: (response) => {
+            //         console.log('Registered successfully', response);
+            //         this.router.navigate(['/']);
+            //     },
+            //     error: (err) => {
+            //         console.error('Registration failed', err);
+            //         this.errorMessage = err.error?.detail || 'Ошибка при регистрации';
+            //     }
+            // });
         }
     }
 }

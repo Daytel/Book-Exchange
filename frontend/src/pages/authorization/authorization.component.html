@@ -1,4 +1,3 @@
-<p>authorization works!</p>
 <div class="auth-container">
     <h1 class="title">{{ mode === 'login' ? 'Авторизация' : 'Регистрация' }}</h1>
     
@@ -6,11 +5,12 @@
         <button class="btn btn-toggle" [ngClass]="{'active': mode === 'login'}" (click)="setMode('login')">Вход</button>
         <button class="btn btn-toggle" [ngClass]="{'active': mode === 'register'}" (click)="setMode('register')">Регистрация</button>
     </div>
+    <div *ngIf="errorMessage" class="error global-error">{{ errorMessage }}</div>
 
     <div *ngIf="mode === 'login'">
         <form class="form" [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()">
             <div class="form-field">
-                <input type="email" placeholder=" " formControlName="email" required>
+                <input type="email" placeholder=" " formControlName="email" required maxlength="50">
                 <span class="label">Email</span>
                 <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="error">
                     {{ loginForm.get('email')?.hasError('required') ? 'Email обязателен' : 'Введите корректный email' }}
@@ -34,7 +34,7 @@
     <div *ngIf="mode === 'register'">
         <form class="form" [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()">
             <div class="form-field">
-                <input type="text" placeholder=" " formControlName="firstName" required>
+                <input type="text" placeholder=" " formControlName="firstName" required maxlength="25">
                 <span class="label">Имя</span>
                 <div *ngIf="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.invalid" class="error">
                     Имя обязательно
@@ -42,7 +42,7 @@
             </div>
             
             <div class="form-field">
-                <input type="text" placeholder=" " formControlName="lastName" required>
+                <input type="text" placeholder=" " formControlName="lastName" required maxlength="50">
                 <span class="label">Фамилия</span>
                 <div *ngIf="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.invalid" class="error">
                     Фамилия обязательна
@@ -50,12 +50,12 @@
             </div>
             
             <div class="form-field">
-                <input type="text" placeholder=" " formControlName="secondName">
+                <input type="text" placeholder=" " formControlName="secondName" maxlength="25">
                 <span class="label">Отчество</span>
             </div>
             
             <div class="form-field">
-                <input type="email" placeholder=" " formControlName="email" required>
+                <input type="email" placeholder=" " formControlName="email" required maxlength="50">
                 <span class="label">Email</span>
                 <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="error">
                     {{ registerForm.get('email')?.hasError('required') ? 'Email обязателен' : 'Введите корректный email' }}
@@ -63,7 +63,7 @@
             </div>
             
             <div class="form-field">
-                <input type="text" placeholder=" " formControlName="userName" required>
+                <input type="text" placeholder=" " formControlName="userName" required maxlength="20">
                 <span class="label">Имя пользователя</span>
                 <div *ngIf="registerForm.get('userName')?.touched && registerForm.get('userName')?.invalid" class="error">
                     Имя пользователя обязательно
