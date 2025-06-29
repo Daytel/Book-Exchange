@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from .schemas import UserCreate
+from .schemas import UserCreate, UserLogin
 from .models import User, Session
 from .database import get_db
 from .auth_utils import SESSION_EXPIRE_HOURS, create_session_token, get_session_expiration
@@ -10,9 +11,15 @@ router = APIRouter()
 @router.post("/login")
 async def login(
     response: Response,
-    user_data: UserCreate,  # Используйте вашу схему аутентификации
+    user_data: UserLogin,  # Используем схему для авторизации
     db: Session = Depends(get_db)
 ):
+    # Добавляем CORS заголовки
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:8080"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    
     user = db.query(User).filter(User.Email == user_data.Email).first()
     
     if not user or not user.check_password(user_data.Password):
@@ -40,11 +47,35 @@ async def login(
         value=session_token,
         httponly=True,
         max_age=SESSION_EXPIRE_HOURS * 3600,
-        secure=True,
+        secure=False,  # Изменено на False для HTTP
         samesite="Lax"
     )
     
-    return {"message": "Успешная авторизация"}
+    # Возвращаем данные пользователя
+    return {
+        "message": "Успешная авторизация",
+        "user": {
+            "IdUser": user.IdUser,
+            "FirstName": user.FirstName,
+            "LastName": user.LastName,
+            "SecondName": user.SecondName,
+            "Email": user.Email,
+            "UserName": user.UserName,
+            "Rating": user.Rating,
+            "CreatedAt": user.CreatedAt,
+            "Enabled": user.Enabled,
+            "IsStaff": user.IsStaff
+        }
+    }
+
+@router.options("/login")
+async def login_options(response: Response):
+    # Обработка preflight запросов
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:8080"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return {"message": "OK"}
 
 @router.post("/logout")
 async def logout(response: Response, request: Request, db: Session = Depends(get_db)):
@@ -90,7 +121,7 @@ async def refresh_session(response: Response, request: Request, db: Session = De
         value=new_token,
         httponly=True,
         max_age=SESSION_EXPIRE_HOURS * 3600,
-        secure=True,
+        secure=False,
         samesite="Lax"
     )
     

@@ -36,6 +36,11 @@ class UserBase(BaseModel):
             raise ValueError('Password must contain only letters and digits')
         return v
 
+# Схема для авторизации
+class UserLogin(BaseModel):
+    Email: EmailStr
+    Password: str
+
 class UserCreate(UserBase):
     pass
 

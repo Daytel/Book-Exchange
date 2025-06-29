@@ -356,6 +356,26 @@ CREATE TABLE IF NOT EXISTS `mydb`.`UserValueCategory` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `mydb`.`Session`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`Session` (
+  `IdSession` INT NOT NULL AUTO_INCREMENT,
+  `SessionToken` VARCHAR(36) NOT NULL,
+  `UserId` INT NOT NULL,
+  `CreatedAt` DATETIME NOT NULL,
+  `ExpiresAt` DATETIME NOT NULL,
+  PRIMARY KEY (`IdSession`),
+  UNIQUE INDEX `SessionToken_UNIQUE` (`SessionToken` ASC) VISIBLE,
+  INDEX `fk_Session_User1_idx` (`UserId` ASC) VISIBLE,
+  CONSTRAINT `fk_Session_User1`
+    FOREIGN KEY (`UserId`)
+    REFERENCES `mydb`.`User` (`IdUser`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
