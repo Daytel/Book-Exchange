@@ -1,1 +1,19 @@
-<p>my-message works!</p>
+<div *ngIf="loading">Загрузка сообщений...</div>
+<div *ngIf="error">{{ error }}</div>
+<div *ngIf="statuses.length">
+  <h4>Настройки email-уведомлений по статусу:</h4>
+  <div *ngFor="let status of statuses">
+    <label>
+      <input type="checkbox" [(ngModel)]="emailPrefs[status.IdStatus]" />
+      {{ status.Name }}
+    </label>
+  </div>
+  <hr>
+</div>
+<ul *ngIf="!loading && !error">
+  <li *ngFor="let msg of messages">
+    <b>{{ msg.CreateAt | date:'short' }}</b>: {{ msg.Text }} <span *ngIf="msg.Notes">({{ msg.Notes }})</span>
+    <br>
+    <small>Статус: {{ msg.IdStatus }}, Тип: {{ msg.Type ? 'Уведомление' : 'Сообщение' }}</small>
+  </li>
+</ul>

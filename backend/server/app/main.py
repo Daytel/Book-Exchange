@@ -7,7 +7,8 @@ import secrets
 from pydantic import BaseModel
 
 from app import models
-from .auth_router import router as auth_router
+from .routes.auth_router import router as auth_router
+from .routes.message_router import router as message_router
 from .database import engine, Base, get_current_user, populate_database
 # Добавить написанные routes
 # from .routes import students, tasks, classes, journal, gamefields, solutions
@@ -36,6 +37,9 @@ app.add_middleware(
 
 # Подключаем роутер аутентификации
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+
+# Подключаем роутер сообщений
+app.include_router(message_router, prefix="/api", tags=["messages"])
 
 # Пример защищенного роута
 @app.get("/protected-data")

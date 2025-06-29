@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
 from sqlalchemy.orm import Session
-from .schemas import LoginRequest, LoginResponse, UserAuthResponse
-from .models import User, Session
-from .database import get_db
-from .auth_utils import SESSION_EXPIRE_HOURS, create_session_token, get_session_expiration
+from ..schemas import LoginRequest, LoginResponse, UserAuthResponse
+from ..models import User, Session
+from ..database import get_db
+from ..auth_utils import SESSION_EXPIRE_HOURS, create_session_token, get_session_expiration
 
 router = APIRouter()
 
@@ -116,7 +116,6 @@ async def refresh_session(response: Response, request: Request, db: Session = De
 
 @router.get("/me", response_model=UserAuthResponse)
 async def get_current_user(request: Request, db: Session = Depends(get_db)):
-    """Получить информацию о текущем пользователе"""
     session_token = request.cookies.get("session_token")
     if not session_token:
         raise HTTPException(status_code=401, detail="Сессия не найдена")
@@ -143,4 +142,4 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
         Enabled=user.Enabled,
         Avatar=user.Avatar,
         IsStaff=user.IsStaff
-    )
+    ) 
