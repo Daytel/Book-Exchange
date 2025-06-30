@@ -32,6 +32,7 @@ import { StartAddressComponent } from '../pages/start-address/start-address.comp
 import { AuthService } from 'src/services/auth.service';
 import { AuthInterceptor } from 'src/services/auth.interceptor';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { AdminGuard } from 'src/guards/admin.guard';
 
 const routes: Routes = [
   {path: '', component: MainPageComponent}, // Главная страница
@@ -51,7 +52,7 @@ const routes: Routes = [
   {path: 'start-exchange/get', component: StartGetComponent}, // Бланк обмена / Хочу получить
   {path: 'start-exchange/address', component: StartAddressComponent}, // Бланк обмена / Доставка
   {path: 'feedback', component: FeedbackComponent}, // Задать вопрос
-  {path: 'admin', component: AdminPanelComponent}, // Админка
+  {path: 'admin', component: AdminPanelComponent, canActivate: [AdminGuard]}, // Админка
   {path: '**', component: NotFoundErrorComponent} // Страница для ошибок
 ];
 
