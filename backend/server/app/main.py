@@ -7,8 +7,10 @@ import secrets
 from pydantic import BaseModel
 
 from app import models
+
 from .routes.auth_router import router as auth_router
 from .routes.message_router import router as message_router
+
 from .database import engine, Base, get_current_user, populate_database
 # Добавить написанные routes
 # from .routes import students, tasks, classes, journal, gamefields, solutions
@@ -29,7 +31,14 @@ populate_database()
 # Настройка CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+
+    allow_origins=[
+        "http://localhost:8080",
+        "http://localhost:4200",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:4200",
+    ],
+
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +46,7 @@ app.add_middleware(
 
 # Подключаем роутер аутентификации
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+
 
 # Подключаем роутер сообщений
 app.include_router(message_router, prefix="/api", tags=["messages"])

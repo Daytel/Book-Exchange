@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 import { NotFoundErrorComponent } from '../pages/not-found-error/not-found-error.component';
 import { MainPageComponent } from '../pages/main-page/main-page.component';
 import { AuthorizationComponent } from 'src/pages/authorization/authorization.component';
@@ -13,6 +15,10 @@ import { StartExchangeComponent } from 'src/pages/start-exchange/start-exchange.
 import { CheckEmailComponent } from 'src/pages/check-email/check-email.component';
 import { VerifyEmailComponent } from 'src/pages/verify-email/verify-email.component';
 import { FeedbackComponent } from '../pages/feedback/feedback.component';
+
+
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+
 import { AdminPanelComponent } from 'src/pages/admin-panel/admin-panel.component';
 import { MyGiveComponent } from 'src/pages/my-give/my-give.component';
 import { MyGetComponent } from '../pages/my-get/my-get.component';
@@ -72,14 +78,16 @@ const routes: Routes = [
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule,
-    RouterModule.forRoot(routes),
-    FormsModule
+    AppRoutingModule, ReactiveFormsModule, HttpClientModule,
+    RouterModule.forRoot(routes)
   ],
-  providers: [
-    AuthService,
-    AuthInterceptor
-  ],
+  providers: [ AuthService,
+          {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            multi: true
+        }],
+
   bootstrap: [AppComponent]
 })
 export class AppModule { }

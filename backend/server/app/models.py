@@ -29,8 +29,14 @@ class User(Base):
         self.Password = get_password_hash(password)
     
     def check_password(self, password: str) -> bool:
-        """Проверяет пароль против хеша"""
-        return verify_password(password, self.Password)
+        """Проверяет пароль против хеша или простого текста"""
+        try:
+            # Сначала пробуем проверить как хеш
+            return verify_password(password, self.Password)
+        except Exception:
+            # Если не получилось, сравниваем как простой текст
+            return password == self.Password
+
     
     __table_args__ = (
         CheckConstraint('LENGTH(Password) >= 8', name='password_length'),
