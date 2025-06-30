@@ -36,6 +36,7 @@ class User(Base):
         except Exception:
             # Если не получилось, сравниваем как простой текст
             return password == self.Password
+
     
     __table_args__ = (
         CheckConstraint('LENGTH(Password) >= 8', name='password_length'),

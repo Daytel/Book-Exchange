@@ -134,8 +134,9 @@ def populate_database():
         sql_commands = f.read()
 
     # Исправляем названия колонок в SQL
-    # Заменяем только в таблице Category, но не в Status
-    sql_commands = sql_commands.replace('`Category`.`Name`', '`Category`.`Value`')
+
+    sql_commands = sql_commands.replace('`Name`', '`Value`')  # Category.Name -> Category.Value
+
     sql_commands = sql_commands.replace('`Category_IdCategory`', '`IdValueCategory`')  # UserValueCategory
 
     with engine.connect() as conn:

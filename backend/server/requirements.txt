@@ -10,3 +10,5 @@ python-jose
 python-multipart
 cryptography
 email-validator
+aiosmtplib
+

@@ -1,10 +1,19 @@
 import { Injectable } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse } from '@angular/common/http';
+
+import {
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpInterceptor,
+  HttpErrorResponse
+} from '@angular/common/http';
+
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
+
     private isRefreshing = false;
 
     constructor(private authService: AuthService) {}
@@ -44,4 +53,5 @@ export class AuthInterceptor implements HttpInterceptor {
         }
         return next.handle(request);
     }
+
 }
