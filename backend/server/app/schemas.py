@@ -18,7 +18,7 @@ class UserBase(BaseModel):
     UserName: str
     Password: PasswordStr
     Rating: float = 0.0
-    CreatedAt: datetime
+    CreatedAt: Optional[datetime] = None
     Enabled: bool = True
     Avatar: Optional[bytes] = None
     IsStaff: bool = False

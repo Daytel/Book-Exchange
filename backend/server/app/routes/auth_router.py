@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
 from sqlalchemy.orm import Session
-from ..schemas import LoginRequest, LoginResponse, UserAuthResponse
+from ..schemas import LoginRequest, LoginResponse, UserAuthResponse, UserCreate
 from ..models import User, Session
 from ..database import get_db
 from ..auth_utils import SESSION_EXPIRE_HOURS, create_session_token, get_session_expiration
+from passlib.context import CryptContext
+from datetime import datetime
 
 router = APIRouter()
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/login", response_model=LoginResponse)
 async def login(
@@ -142,4 +146,48 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
         Enabled=user.Enabled,
         Avatar=user.Avatar,
         IsStaff=user.IsStaff
+    )
+
+@router.post("/register", response_model=UserAuthResponse)
+async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    # Проверка уникальности email
+    if db.query(User).filter(User.Email == user_data.Email).first():
+        raise HTTPException(status_code=400, detail="Email уже зарегистрирован")
+    # Проверка уникальности userName
+    if db.query(User).filter(User.UserName == user_data.UserName).first():
+        raise HTTPException(status_code=400, detail="UserName уже занят")
+
+    # Хешируем пароль
+    hashed_password = pwd_context.hash(user_data.Password)
+
+    # Создаем пользователя
+    new_user = User(
+        FirstName=user_data.FirstName,
+        LastName=user_data.LastName,
+        SecondName=user_data.SecondName,
+        Email=user_data.Email,
+        UserName=user_data.UserName,
+        Password=hashed_password,
+        Rating=0.0,
+        CreatedAt=datetime.utcnow(),
+        Enabled=True,
+        Avatar=None,
+        IsStaff=False
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return UserAuthResponse(
+        IdUser=new_user.IdUser,
+        FirstName=new_user.FirstName,
+        LastName=new_user.LastName,
+        SecondName=new_user.SecondName,
+        Email=new_user.Email,
+        UserName=new_user.UserName,
+        Rating=new_user.Rating,
+        CreatedAt=new_user.CreatedAt,
+        Enabled=new_user.Enabled,
+        Avatar=new_user.Avatar,
+        IsStaff=new_user.IsStaff
     ) 

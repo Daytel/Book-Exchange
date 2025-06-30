@@ -1,8 +1,8 @@
-
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ValidationErrors, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { Observable } from 'rxjs';
 
 @Component({
     selector: 'app-authorization',
@@ -85,21 +85,17 @@ export class AuthorizationComponent implements OnInit {
     onRegisterSubmit(): void {
         if (this.registerForm.valid) {
             console.log('Register data:', this.registerForm.value);
-            // Временно эмулируем регистрацию, так как эндпоинта нет
-            this.errorMessage = 'Регистрация временно недоступна';
-            // TODO: Реализовать запрос на /auth/register, когда эндпоинт будет добавлен
-            // Пример:
-            // const { firstName, lastName, secondName, email, userName, password } = this.registerForm.value;
-            // this.authService.register({ firstName, lastName, secondName, email, userName, password }).subscribe({
-            //     next: (response) => {
-            //         console.log('Registered successfully', response);
-            //         this.router.navigate(['/']);
-            //     },
-            //     error: (err) => {
-            //         console.error('Registration failed', err);
-            //         this.errorMessage = err.error?.detail || 'Ошибка при регистрации';
-            //     }
-            // });
+            const { firstName, lastName, secondName, email, userName, password } = this.registerForm.value;
+            this.authService.register({ firstName, lastName, secondName, email, userName, password }).subscribe({
+                next: (response) => {
+                    console.log('Registered successfully', response);
+                    this.router.navigate(['/']);
+                },
+                error: (err) => {
+                    console.error('Registration failed', err);
+                    this.errorMessage = err.error?.detail || 'Ошибка при регистрации';
+                }
+            });
         }
     }
 }

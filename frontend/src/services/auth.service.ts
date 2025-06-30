@@ -17,18 +17,18 @@ export class AuthService {
     }
 
     // Временно закомментировано, так как эндпоинта нет
-    // register(data: { firstName: string, lastName: string, secondName: string, email: string, userName: string, password: string }): Observable<any> {
-    //     return this.http.post(`${this.apiUrl}/auth/register`, {
-    //         FirstName: data.firstName,
-    //         LastName: data.lastName,
-    //         SecondName: data.secondName || '',
-    //         Email: data.email,
-    //         UserName: data.userName,
-    //         Password: data.password
-    //     }, {
-    //         withCredentials: true
-    //     });
-    // }
+    register(data: { firstName: string, lastName: string, secondName: string, email: string, userName: string, password: string }): Observable<any> {
+        return this.http.post(`${this.apiUrl}/auth/register`, {
+            FirstName: data.firstName,
+            LastName: data.lastName,
+            SecondName: data.secondName || '',
+            Email: data.email,
+            UserName: data.userName,
+            Password: data.password
+        }, {
+            withCredentials: true
+        });
+    }
 
     logout(): Observable<any> {
         return this.http.post(`${this.apiUrl}/auth/logout`, {}, {
