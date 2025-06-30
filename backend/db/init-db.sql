@@ -73,7 +73,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`Status` (
   `IdStatus` INT NOT NULL COMMENT '1x - статус обмена, 2x - статус обращения',
-  `Name` VARCHAR(10) NULL DEFAULT 'свободен' COMMENT 'По ',
+  `Name` VARCHAR(100) NULL COMMENT 'Описание статуса',
   PRIMARY KEY (`IdStatus`),
   UNIQUE INDEX `idStatus_UNIQUE` (`IdStatus` ASC) VISIBLE)
 ENGINE = InnoDB;

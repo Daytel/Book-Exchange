@@ -69,7 +69,7 @@ class Status(Base):
     __tablename__ = 'Status'
     
     IdStatus = Column(Integer, primary_key=True)
-    Name = Column(String(10), default='свободен')
+    Name = Column(String(100))
 
 class OfferList(Base):
     __tablename__ = 'OfferList'
