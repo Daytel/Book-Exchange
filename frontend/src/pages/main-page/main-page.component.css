@@ -1,0 +1,150 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: sans-serif;
+  background-color: #efedff;
+  color: #222;
+  line-height: 1.6;
+  font-size: 24px;
+}
+
+.header {
+  display: flex;
+  font-size: 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 1px solid #ccc;
+}
+
+.logo img {
+  height: 50px;
+}
+
+.nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav a {
+  text-decoration: none;
+  color: black;
+  font-weight: 500;
+  position: relative;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.nav a:hover {
+  transform: translateY(-4px);
+}
+
+.auth-btn {
+  border: 2px solid black;
+  background: white;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.auth-btn:hover {
+  background: #f0f0f0;
+}
+
+.main {
+  position: relative;
+  padding: 2rem 4rem 8rem; 
+}
+
+.hero .text {
+  max-width: 1000px;
+}
+
+.hero .text p {
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.subtitle {
+  margin-left: 0.5rem;
+}
+
+.text mark {
+  background-color: #fffdd0;
+  padding: 0 0.2em;
+  border-radius: 4px;
+}
+
+.book-image {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+}
+
+.book-image img {
+  max-width: 300px;
+  height: auto;
+  opacity: 0.9;
+}
+
+@media screen and (min-width: 1920px) {
+  body {
+    font-size: 26px;
+  }
+  .book-image img {
+    max-width: 380px;
+  }
+  .main {
+    padding-bottom: 10rem;
+  }
+}
+
+@media screen and (max-width: 1366px) {
+  body {
+    font-size: 22px;
+  }
+  .book-image img {
+    max-width: 250px;
+  }
+  .main {
+    padding: 2rem;
+  }
+}
+
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-link {
+  text-decoration: none;
+  font-weight: bold;
+  color: black;
+  font-size: 20px;
+  border: 1px solid black;
+  padding: 0.5rem 1rem;
+  transition: background 0.3s, color 0.3s;
+}
+
+.auth-link:hover {
+  background-color: black;
+  font-size: 20px;
+  color: white;
+}
+
+.separator {
+  font-weight: bold;
+  margin: 0 0.2rem;
+  color: #555;
+}

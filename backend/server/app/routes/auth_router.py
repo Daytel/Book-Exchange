@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Response, Path
 from sqlalchemy.orm import Session
 from ..schemas import LoginRequest, LoginResponse, UserAuthResponse, UserCreate
 from ..models import User, Session
@@ -190,4 +190,23 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
         Enabled=new_user.Enabled,
         Avatar=new_user.Avatar,
         IsStaff=new_user.IsStaff
+    )
+
+@router.get("/user/{user_id}", response_model=UserAuthResponse)
+async def get_user_by_id(user_id: int = Path(..., description="ID пользователя"), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.IdUser == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    return UserAuthResponse(
+        IdUser=user.IdUser,
+        FirstName=user.FirstName,
+        LastName=user.LastName,
+        SecondName=user.SecondName,
+        Email=user.Email,
+        UserName=user.UserName,
+        Rating=user.Rating,
+        CreatedAt=user.CreatedAt,
+        Enabled=user.Enabled,
+        Avatar=user.Avatar,
+        IsStaff=user.IsStaff
     ) 

@@ -67,4 +67,10 @@ export class AuthService {
         localStorage.removeItem('userRole');
     }
 
+    getUserById(id: number): Observable<any> {
+        return this.http.get(`${this.apiUrl}/auth/user/${id}`, {
+            withCredentials: true
+        });
+    }
+
 }

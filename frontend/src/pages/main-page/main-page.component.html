@@ -1,1 +1,42 @@
-<p>main-page works!</p>
+<!-- Шапка -->
+<header class="header">
+  <div class="logo">
+    <img src="assets/logo.png" alt="Логотип">
+  </div>
+  <nav class="nav">
+    <a routerLink="/">Главная</a>
+    <a routerLink="/start-exchange/give">Начать обмен</a>
+    <a routerLink="/my-exchange/offers">Мои обмены</a>
+    <a routerLink="/feedback">Задать вопрос</a>
+  </nav>
+  <div class="auth" *ngIf="!isLoggedIn">
+    <a routerLink="/auth/login" class="auth-link">Авторизоваться</a>
+    <span class="separator">|</span>
+    <a routerLink="/auth/register" class="auth-link">Регистрация</a>
+  </div>
+  <div class="auth" *ngIf="isLoggedIn">
+    <div class="user-info" (click)="goToProfile()" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+      <img *ngIf="avatar" [src]="avatar" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <span>{{ userName }}</span>
+    </div>
+    <button class="auth-link" style="margin-left:1rem;" (click)="logout()">Выйти</button>
+  </div>
+</header>
+
+<main class="main">
+  <section class="hero">
+    <div class="text">
+      <p>
+        <span class="title">Обмен книгами (буккроссер)</span>
+        <span class="subtitle">становится все более популярен. Это дает шанс бумажным книгам продлить свою жизнь, помогает владельцам книг делиться хорошими историями и получать новые впечатления.</span>
+      </p>
+      <p>Все буккроссеры любят свои книги и любят их читать. Они щедрые, новаторские, дружелюбные, добросердечные, веселые и образованные люди.</p>
+      <p>Наш сайт предлагает совершить не просто обмен, а добавить к этому увлекательному процессу <mark>элемент сюрприза</mark>.</p>
+      <p>Подбор книг для обмена будет выполнен <mark>по пожеланиям</mark> участников, но только при получении книги станет известно, какая именно книга будет радовать своего владельца.</p>
+      <p><em>Интересно?</em> Тогда начинайте обмен и приглашайте своих друзей поучаствовать!</p>
+    </div>
+  </section>
+  <div class="book-image">
+    <img src="assets/b.png" alt="Книга">
+  </div>
+</main>
