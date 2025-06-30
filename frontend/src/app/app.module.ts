@@ -78,7 +78,7 @@ const routes: Routes = [
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule, ReactiveFormsModule, HttpClientModule,
+    AppRoutingModule, ReactiveFormsModule, HttpClientModule, FormsModule,
     RouterModule.forRoot(routes)
   ],
   providers: [ AuthService,

@@ -6,6 +6,9 @@ ENV MYSQL_DEFAULT_CHARACTER_SET=utf8mb4
 
 ENV MYSQL_INITDB_SKIP_TZINFO=1
 ENV LANG=C.UTF-8
-COPY init-db.sql test_data.sql
+
+# Копируем скрипты в специальную папку
+COPY init-db.sql /docker-entrypoint-initdb.d/
+COPY test_data.sql /docker-entrypoint-initdb.d/
 
 EXPOSE 3306
