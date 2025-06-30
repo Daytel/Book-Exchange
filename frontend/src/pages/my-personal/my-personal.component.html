@@ -1,1 +1,163 @@
-<p>my-personal works!</p>
+<form [formGroup]="personalForm" (ngSubmit)="saveChanges()" novalidate>
+  <div class="container">
+    <h1>Редактирование личных данных</h1>
+
+    <div class="avatar-section">
+      <div class="avatar">
+        <img [src]="avatarPreview || 'assets/default-avatar.jpg'" alt="Аватар" id="avatar-preview">
+      </div>
+      <div class="avatar-upload">
+        <input type="file" id="avatar-upload" accept="image/*" (change)="onAvatarUpload($event)" style="display: none;">
+        <button type="button" class="avatar-upload-btn" (click)="triggerFileInput()">Загрузить аватар</button>
+        <div class="form-note">Рекомендуемый размер: 150x150 px</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-col">
+        <div class="form-group">
+          <label for="last-name">Фамилия*</label>
+          <input type="text" id="last-name" formControlName="lastName"
+                 [class.invalid]="personalForm.get('lastName')?.invalid && personalForm.get('lastName')?.touched">
+          <div class="error-message" *ngIf="personalForm.get('lastName')?.invalid && personalForm.get('lastName')?.touched">
+            Только кириллические буквы (до 50 символов)
+          </div>
+        </div>
+      </div>
+      <div class="form-col">
+        <div class="form-group">
+          <label for="first-name">Имя*</label>
+          <input type="text" id="first-name" formControlName="firstName"
+                 [class.invalid]="personalForm.get('firstName')?.invalid && personalForm.get('firstName')?.touched">
+          <div class="error-message" *ngIf="personalForm.get('firstName')?.invalid && personalForm.get('firstName')?.touched">
+            Только кириллические буквы (до 25 символов)
+          </div>
+        </div>
+      </div>
+      <div class="form-col">
+        <div class="form-group">
+          <label for="middle-name">Отчество</label>
+          <input type="text" id="middle-name" formControlName="middleName"
+                 [class.invalid]="personalForm.get('middleName')?.invalid && personalForm.get('middleName')?.touched">
+          <div class="error-message" *ngIf="personalForm.get('middleName')?.invalid && personalForm.get('middleName')?.touched">
+            Только кириллические буквы (до 25 символов)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">E-mail*</label>
+      <input type="email" id="email" formControlName="email"
+             [class.invalid]="personalForm.get('email')?.invalid && personalForm.get('email')?.touched">
+      <div class="form-note">На этот адрес будет отправлено письмо для подтверждения</div>
+      <div class="error-message" *ngIf="personalForm.get('email')?.invalid && personalForm.get('email')?.touched">
+        Введите корректный email-адрес
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="nickname">Никнейм* 
+        <span class="generate-nickname" (click)="generateNickname()">Сгенерировать</span>
+      </label>
+      <input type="text" id="nickname" formControlName="nickname"
+             [class.invalid]="personalForm.get('nickname')?.invalid && personalForm.get('nickname')?.touched">
+      <div class="error-message" *ngIf="personalForm.get('nickname')?.invalid && personalForm.get('nickname')?.touched">
+        Никнейм должен быть до 20 символов
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Пароль*</label>
+      <input type="password" id="password" formControlName="password"
+             [class.invalid]="personalForm.get('password')?.invalid && personalForm.get('password')?.touched">
+      <div class="form-note">От 8 до 15 символов</div>
+      <div class="error-message" *ngIf="personalForm.get('password')?.invalid && personalForm.get('password')?.touched">
+        Пароль должен быть от 8 до 15 символов
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="confirm-password">Подтверждение пароля*</label>
+      <input type="password" id="confirm-password" formControlName="confirmPassword"
+             [class.invalid]="personalForm.get('confirmPassword')?.invalid && personalForm.get('confirmPassword')?.touched">
+      <div class="error-message" *ngIf="personalForm.hasError('mismatch') && personalForm.get('confirmPassword')?.touched">
+        Пароли не совпадают
+      </div>
+    </div>
+
+    <h2 class="section-title">Адрес</h2>
+    <div class="address-fields">
+      <div class="form-row">
+        <div class="form-col">
+          <div class="form-group">
+            <label for="postal-code">Индекс*</label>
+            <input type="text" id="postal-code" formControlName="postalCode"
+                   [class.invalid]="personalForm.get('postalCode')?.invalid && personalForm.get('postalCode')?.touched">
+            <div class="error-message" *ngIf="personalForm.get('postalCode')?.invalid && personalForm.get('postalCode')?.touched">
+              Введите 6 цифр
+            </div>
+          </div>
+        </div>
+        <div class="form-col">
+          <div class="form-group">
+            <label for="city">Город*</label>
+            <input type="text" id="city" formControlName="city"
+                   [class.invalid]="personalForm.get('city')?.invalid && personalForm.get('city')?.touched">
+            <div class="error-message" *ngIf="personalForm.get('city')?.invalid && personalForm.get('city')?.touched">
+              Только кириллические буквы (до 15 символов)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <div class="form-group">
+            <label for="street">Улица*</label>
+            <input type="text" id="street" formControlName="street"
+                   [class.invalid]="personalForm.get('street')?.invalid && personalForm.get('street')?.touched">
+            <div class="error-message" *ngIf="personalForm.get('street')?.invalid && personalForm.get('street')?.touched">
+              Поле обязательно (до 25 символов)
+            </div>
+          </div>
+        </div>
+        <div class="form-col">
+          <div class="form-group">
+            <label for="building">Строение</label>
+            <input type="text" id="building" formControlName="building"
+                   [class.invalid]="personalForm.get('building')?.invalid && personalForm.get('building')?.touched">
+            <div class="error-message" *ngIf="personalForm.get('building')?.invalid && personalForm.get('building')?.touched">
+              Допустимы буквы и цифры (до 10 символов)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <div class="form-group">
+            <label for="house">Дом*</label>
+            <input type="text" id="house" formControlName="house"
+                   [class.invalid]="personalForm.get('house')?.invalid && personalForm.get('house')?.touched">
+            <div class="error-message" *ngIf="personalForm.get('house')?.invalid && personalForm.get('house')?.touched">
+              Допустимы цифры и 1 буква (до 5 символов)
+            </div>
+          </div>
+        </div>
+        <div class="form-col">
+          <div class="form-group">
+            <label for="apartment">Квартира</label>
+            <input type="text" id="apartment" formControlName="apartment"
+                   [class.invalid]="personalForm.get('apartment')?.invalid && personalForm.get('apartment')?.touched">
+            <div class="error-message" *ngIf="personalForm.get('apartment')?.invalid && personalForm.get('apartment')?.touched">
+              Только цифры (до 3 символов)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn" [disabled]="personalForm.invalid">Сохранить изменения</button>
+  </div>
+</form>
