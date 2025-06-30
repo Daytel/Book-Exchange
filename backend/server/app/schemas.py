@@ -102,7 +102,7 @@ class BookLiteraryResponse(BookLiteraryBase):
 
 # --------------- Status Schemas ---------------
 class StatusBase(BaseModel):
-    Name: str = 'свободен'
+    Name: str
 
 class StatusCreate(StatusBase):
     pass
