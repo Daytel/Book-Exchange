@@ -22,7 +22,7 @@ export class MainPageComponent implements OnInit {
         next: (user: any) => {
           this.userName = user.UserName || user.userName || user.Email;
           if (user.Avatar) {
-            this.avatar = 'data:image/png;base64,' + user.Avatar;
+            this.avatar = 'data:image/jpeg;base64,' + user.Avatar;
           }
         },
         error: () => {
@@ -30,6 +30,11 @@ export class MainPageComponent implements OnInit {
         }
       });
     }
+
+    this.authService.refreshSession().subscribe({
+      next: () => { /* сессия обновлена */ },
+      error: () => { /* пользователь не авторизован */ }
+    });
   }
 
   goToProfile() {
@@ -41,5 +46,10 @@ export class MainPageComponent implements OnInit {
       this.authService.clearUserData();
       window.location.reload();
     });
+  }
+
+  showAuthAlert(event: Event) {
+    event.preventDefault();
+    alert('Для доступа к разделу "Мои обмены" необходимо авторизоваться!');
   }
 }

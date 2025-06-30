@@ -148,3 +148,10 @@ body {
   margin: 0 0.2rem;
   color: #555;
 }
+
+.disabled-link {
+  color: #aaa !important;
+  pointer-events: none;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}

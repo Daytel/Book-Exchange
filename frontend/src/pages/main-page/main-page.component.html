@@ -6,7 +6,10 @@
   <nav class="nav">
     <a routerLink="/">Главная</a>
     <a routerLink="/start-exchange/give">Начать обмен</a>
-    <a routerLink="/my-exchange/offers">Мои обмены</a>
+    <a *ngIf="isLoggedIn; else noAccess" routerLink="/my-exchange/offers">Мои обмены</a>
+    <ng-template #noAccess>
+      <a href="#" class="disabled-link" (click)="showAuthAlert($event)">Мои обмены</a>
+    </ng-template>
     <a routerLink="/feedback">Задать вопрос</a>
   </nav>
   <div class="auth" *ngIf="!isLoggedIn">
