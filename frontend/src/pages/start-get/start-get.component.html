@@ -1,1 +1,72 @@
-<p>start-get works!</p>
+<!-- Шапка -->
+<header class="header">
+  <div class="logo">
+    <img src="assets/logo.png" alt="Логотип">
+  </div>
+  <nav class="nav">
+    <a routerLink="/">Главная</a>
+    <a routerLink="/start-exchange/give">Начать обмен</a>
+    <a *ngIf="isLoggedIn; else noAccess" routerLink="/my-exchange/offers">Мои обмены</a>
+    <ng-template #noAccess>
+      <a href="#" class="disabled-link" (click)="showAuthAlert($event)">Мои обмены</a>
+    </ng-template>
+    <a routerLink="/feedback">Задать вопрос</a>
+  </nav>
+  <div class="auth" *ngIf="!isLoggedIn">
+    <a routerLink="/auth/login" class="auth-link">Авторизоваться</a>
+    <span class="separator">|</span>
+    <a routerLink="/auth/register" class="auth-link">Регистрация</a>
+  </div>
+  <div class="auth" *ngIf="isLoggedIn">
+    <div class="user-info" (click)="goToProfile()" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+      <img *ngIf="avatar" [src]="avatar" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <span>{{ userName }}</span>
+    </div>
+  </div>
+</header>
+
+<section class="exchange-form">
+  <h1>Бланк обмена</h1>
+  <div class="tabs">
+    <button class="tab" (click)="goToGive()">Хочу обменять</button>
+    <button class="tab active">Хочу получить</button>
+    <button class="tab" (click)="goToAddress()">Адрес доставки</button>
+  </div>
+  <form>
+    <section class="filter-menu">
+      <h2>Категории</h2>
+      <div class="filter-section" id="filters">
+        <ng-container *ngFor="let category of categories">
+          <div class="filter-group" [class.open]="category.open">
+            <button type="button" class="filter-toggle" (click)="toggleCategory(category)">{{category.Value}}</button>
+            <div class="filter-options">
+              <ng-container *ngIf="category.MultySelect; else singleSelect">
+                <label *ngFor="let value of category.values">
+                  <input type="checkbox"
+                         [value]="value.IdValueCategory"
+                         [(ngModel)]="value.selected"
+                         name="cat_{{category.IdCategory}}_val_{{value.IdValueCategory}}"> {{value.Value}}
+                </label>
+              </ng-container>
+              <ng-template #singleSelect>
+                <label *ngFor="let value of category.values">
+                  <input type="radio"
+                         [name]="'cat_' + category.IdCategory"
+                         [value]="value.IdValueCategory"
+                         [(ngModel)]="category.selected"> {{value.Value}}
+                </label>
+              </ng-template>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+      <button type="button" id="clear-all" (click)="clearAllFilters()">Снять выделения</button>
+    </section>
+  </form>
+</section>
+<div class="form-navigation">
+  <button *ngIf="!isEditMode" type="button" class="back-btn" (click)="goToGive()">&lt;&lt; Назад</button>
+  <button *ngIf="!isEditMode" type="button" class="next-btn" id="next-btn" (click)="onNext()">Далее &gt;&gt;</button>
+  <button *ngIf="isEditMode" type="button" class="next-btn" id="save-btn" (click)="onNext()">Сохранить</button>
+</div>
+<div *ngIf="errorMsg" class="error-message">{{errorMsg}}</div>

@@ -66,6 +66,7 @@ export class AuthService {
         localStorage.removeItem('userId');
         localStorage.removeItem('userRole');
     }
+
     getUserAddress(userId: number): Observable<any> {
     console.log('Запрос адреса к:', `${this.apiUrl}/auth/address/${userId}`);
         return this.http.get(`${this.apiUrl}/auth/address/${userId}`, {
@@ -83,5 +84,13 @@ export class AuthService {
     return this.http.put(`${this.apiUrl}/auth/address/${userId}`, addressData, {
       withCredentials: true
     });
-  }
+    }
+
+
+    getUserById(id: number): Observable<any> {
+        return this.http.get(`${this.apiUrl}/auth/user/${id}`, {
+            withCredentials: true
+        });
+    }
+
 }

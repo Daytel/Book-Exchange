@@ -10,6 +10,7 @@ from app import models
 
 from .routes.auth_router import router as auth_router
 from .routes.message_router import router as message_router
+from .routes.category_router import router as category_router
 
 from .database import engine, Base, get_current_user, populate_database
 # Добавить написанные routes
@@ -46,6 +47,9 @@ app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 # Подключаем роутер сообщений
 app.include_router(message_router, prefix="/api", tags=["messages"])
+
+# Подключаем роутер категорий
+app.include_router(category_router, prefix="/categories", tags=["categories"])
 
 # Пример защищенного роута
 @app.get("/protected-data")

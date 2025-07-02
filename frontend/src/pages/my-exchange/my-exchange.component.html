@@ -1,1 +1,113 @@
-<p>my-exchange works!</p>
+<header class="header">
+  <div class="logo">
+    <img src="assets/logo.png" alt="Логотип">
+  </div>
+  <nav class="nav">
+    <a routerLink="/">Главная</a>
+    <a routerLink="/start-exchange/give">Начать обмен</a>
+    <a *ngIf="isLoggedIn; else noAccess" routerLink="/my-exchange/offers">Мои обмены</a>
+    <ng-template #noAccess>
+      <a href="#" class="disabled-link" (click)="showAuthAlert($event)">Мои обмены</a>
+    </ng-template>
+    <a routerLink="/feedback">Задать вопрос</a>
+  </nav>
+  <div class="auth" *ngIf="!isLoggedIn">
+    <a routerLink="/auth/login" class="auth-link">Авторизоваться</a>
+    <span class="separator">|</span>
+    <a routerLink="/auth/register" class="auth-link">Регистрация</a>
+  </div>
+  <div class="auth" *ngIf="isLoggedIn">
+    <div class="user-info" (click)="goToProfile()" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+      <img *ngIf="avatar" [src]="avatar" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <span>{{ userName }}</span>
+    </div>
+    <button class="auth-link" style="margin-left:1rem;" (click)="logout()">Выйти</button>
+  </div>
+</header>
+
+<div class="main-container">
+  <div class="user-profile">
+    <div class="user-info">
+      <div class="avatar">
+        <img [src]="userAvatar" alt="Аватар">
+      </div>
+      <a routerLink="/my-exchange/personal" class="username">{{ userName }}</a>
+      <div class="rating">рейтинг {{ userRating }}</div>
+    </div>
+    <ul class="menu">
+      <li><a href="#" class="active">Предложения для обмена</a></li>
+      <li><a routerLink="/my-exchange/give">Хочу обменять</a></li>
+      <li><a routerLink="/my-exchange/get">Хочу получить</a></li>
+      <li><a routerLink="/my-exchange/active">Активные обмены</a></li>
+      <li><a routerLink="/my-exchange/review">Отзывы на книги</a></li>
+      <li><a routerLink="/my-exchange/personal">Личные данные</a></li>
+      <li><a routerLink="/my-exchange/message">Сообщения</a></li>
+      <li><a routerLink="/my-exchange/archive">Архив</a></li>
+    </ul>
+  </div>
+
+  <div class="content">
+    <h1 class="section-title">Предложения для обмена</h1>
+    <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+      <button (click)="refreshMatches()" [disabled]="!canRefresh">Обновить</button>
+      <span *ngIf="lastUpdateTime">Последнее обновление: {{ lastUpdateTime | date:'HH:mm' }}</span>
+      <span *ngIf="!canRefresh && refreshCountdown !== null" class="refresh-countdown">Можно обновить через {{ refreshCountdown }} сек.</span>
+    </div>
+    <div class="offers-section">
+      <h2>Полное совпадение</h2>
+      <table class="offers-table" *ngIf="fullMatches.length; else noFull">
+        <tr>
+          <th>Пользователь</th>
+          <th>Город</th>
+          <th>Рейтинг</th>
+          <th></th>
+        </tr>
+        <tr *ngFor="let offer of fullMatches">
+          <td><a [routerLink]="['/profile', offer.userId]" class="user-link">{{ offer.userName }}</a></td>
+          <td>{{ offer.city }}</td>
+          <td>рейтинг {{ offer.rating }}</td>
+          <td><button (click)="offerExchange(offer)">Предложить обмен</button></td>
+        </tr>
+      </table>
+      <ng-template #noFull><div>Нет полных совпадений.</div></ng-template>
+    </div>
+
+    <div class="offers-section">
+      <h2>Частичное совпадение</h2>
+      <table class="offers-table" *ngIf="partialMatches.length; else noPartial">
+        <tr>
+          <th>Пользователь</th>
+          <th>Город</th>
+          <th>Рейтинг</th>
+          <th></th>
+        </tr>
+        <tr *ngFor="let offer of partialMatches">
+          <td><a [routerLink]="['/profile', offer.userId]" class="user-link">{{ offer.userName }}</a></td>
+          <td>{{ offer.city }}</td>
+          <td>рейтинг {{ offer.rating }}</td>
+          <td><button (click)="offerExchange(offer)">Предложить обмен</button></td>
+        </tr>
+      </table>
+      <ng-template #noPartial><div>Нет частичных совпадений.</div></ng-template>
+    </div>
+
+    <div class="offers-section">
+      <h2>Другие интересные предложения</h2>
+      <table class="offers-table" *ngIf="otherMatches.length; else noOther">
+        <tr>
+          <th>Пользователь</th>
+          <th>Город</th>
+          <th>Рейтинг</th>
+          <th></th>
+        </tr>
+        <tr *ngFor="let offer of otherMatches">
+          <td><a [routerLink]="['/profile', offer.userId]" class="user-link">{{ offer.userName }}</a></td>
+          <td>{{ offer.city }}</td>
+          <td>рейтинг {{ offer.rating }}</td>
+          <td><button (click)="offerExchange(offer)">Предложить обмен</button></td>
+        </tr>
+      </table>
+      <ng-template #noOther><div>Нет других предложений.</div></ng-template>
+    </div>
+  </div>
+</div>

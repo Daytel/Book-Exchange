@@ -22,6 +22,7 @@ class User(Base):
     Enabled = Column(Boolean, default=True)
     Avatar = Column(LargeBinary)
     IsStaff = Column(Boolean, default=False)
+    offerlists = relationship("OfferList", back_populates="user")
 
     # Методы для работы с паролем
     def set_password(self, password: str):
@@ -45,6 +46,10 @@ class User(Base):
         CheckConstraint('Email LIKE "%@%"', name='valid_email'),
     )
     
+    # Добавьте связь с адресами (один-ко-многим)
+    addresses = relationship("UserAddress", backref="user")
+    # Если нужен только один адрес (например, основной):
+    main_address = relationship("UserAddress", uselist=False, primaryjoin="User.IdUser==UserAddress.IdUser")
 
 class Autor(Base):
     __tablename__ = 'Autor'
@@ -82,7 +87,7 @@ class OfferList(Base):
     IdStatus = Column(Integer, ForeignKey('Status.IdStatus'), nullable=False)
     
     book = relationship("BookLiterary")
-    user = relationship("User")
+    user = relationship("User", back_populates="offerlists")
     status = relationship("Status")
 
 class UserAddress(Base):
@@ -157,13 +162,9 @@ class UserExchangeList(Base):
 
 class Category(Base):
     __tablename__ = 'Category'
-    
     IdCategory = Column(Integer, primary_key=True, autoincrement=True)
-    Name = Column(String(25), nullable=False)
-    IdParent = Column(Integer, ForeignKey('Category.IdCategory'), default=0)
+    Value = Column(String(25), nullable=False)
     MultySelect = Column(Boolean, default=False)
-    
-    parent = relationship("Category", remote_side=[IdCategory])
 
 class BookResponse(Base):
     __tablename__ = 'BookResponse'
@@ -191,10 +192,10 @@ class UserValueCategory(Base):
     __tablename__ = 'UserValueCategory'
     
     IdUserList = Column(Integer, ForeignKey('UserList.IdUserList'), primary_key=True)
-    IdCategory = Column(Integer, ForeignKey('Category.IdCategory'), primary_key=True)
+    IdValueCategory = Column(Integer, ForeignKey('ValueCategory.IdValueCategory'), primary_key=True)
     
     user_list = relationship("UserList")
-    category = relationship("Category")
+    value_category = relationship("ValueCategory")
 
 class Session(Base):
     __tablename__ = 'Session'
@@ -207,3 +208,10 @@ class Session(Base):
     
     # Связь с пользователем
     user = relationship("User")
+
+class ValueCategory(Base):
+    __tablename__ = 'ValueCategory'
+    IdValueCategory = Column(Integer, primary_key=True, autoincrement=True)
+    Value = Column(String(25), nullable=False)
+    IdCategory = Column(Integer, ForeignKey('Category.IdCategory'), nullable=False)
+    category = relationship("Category")

@@ -1,1 +1,89 @@
-<p>start-address works!</p>
+<!-- Шапка -->
+<header class="header">
+  <div class="logo">
+    <img src="assets/logo.png" alt="Логотип">
+  </div>
+  <nav class="nav">
+    <a routerLink="/">Главная</a>
+    <a routerLink="/start-exchange/give">Начать обмен</a>
+    <a *ngIf="isLoggedIn; else noAccess" routerLink="/my-exchange/offers">Мои обмены</a>
+    <ng-template #noAccess>
+      <a href="#" class="disabled-link" (click)="showAuthAlert($event)">Мои обмены</a>
+    </ng-template>
+    <a routerLink="/feedback">Задать вопрос</a>
+  </nav>
+  <div class="auth" *ngIf="!isLoggedIn">
+    <a routerLink="/auth/login" class="auth-link">Авторизоваться</a>
+    <span class="separator">|</span>
+    <a routerLink="/auth/register" class="auth-link">Регистрация</a>
+  </div>
+  <div class="auth" *ngIf="isLoggedIn">
+    <div class="user-info" (click)="goToProfile()" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+      <img *ngIf="avatar" [src]="avatar" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <span>{{ userName }}</span>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+  <section class="exchange-form">
+    <h1>Бланк обмена</h1>
+    <div class="tabs">
+      <button class="tab" (click)="goToGive()">Хочу обменять</button>
+      <button class="tab" (click)="goToGet()">Хочу получить</button>
+      <button class="tab active">Адрес доставки</button>
+    </div>
+    <form [formGroup]="addressForm" class="form-container" (ngSubmit)="onSubmit()">
+      <div class="form-block">
+        <label for="city">Город *</label>
+        <input formControlName="city" id="city" type="text" />
+        <div *ngIf="addressForm.get('city')?.invalid && (addressForm.get('city')?.dirty || addressForm.get('city')?.touched)" class="error-message">Поле обязательно</div>
+        <label for="street">Улица *</label>
+        <input formControlName="street" id="street" type="text" />
+        <div *ngIf="addressForm.get('street')?.invalid && (addressForm.get('street')?.dirty || addressForm.get('street')?.touched)" class="error-message">Поле обязательно</div>
+        <div class="form-row">
+          <div>
+            <label for="building">Строение</label>
+            <input formControlName="building" id="building" type="text" />
+          </div>
+          <div>
+            <label for="house">Дом *</label>
+            <input formControlName="house" id="house" type="text" />
+            <div *ngIf="addressForm.get('house')?.invalid && (addressForm.get('house')?.dirty || addressForm.get('house')?.touched)" class="error-message">Поле обязательно</div>
+          </div>
+          <div>
+            <label for="flat">Квартира</label>
+            <input formControlName="flat" id="flat" type="text" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="index">Почтовый индекс<span class="required">*</span></label>
+          <input id="index" formControlName="index" type="text" maxlength="6" class="form-control" placeholder="6 цифр">
+          <div *ngIf="addressForm.get('index')?.touched && addressForm.get('index')?.invalid" class="error-message">
+            <span *ngIf="addressForm.get('index')?.errors?.['required']">Индекс обязателен.</span>
+            <span *ngIf="addressForm.get('index')?.errors?.['pattern']">Индекс должен состоять из 6 цифр.</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-block">
+        <label for="surname">Фамилия *</label>
+        <input formControlName="surname" id="surname" type="text" />
+        <div *ngIf="addressForm.get('surname')?.invalid && (addressForm.get('surname')?.dirty || addressForm.get('surname')?.touched)" class="error-message">Поле обязательно</div>
+        <label for="name">Имя *</label>
+        <input formControlName="name" id="name" type="text" />
+        <div *ngIf="addressForm.get('name')?.invalid && (addressForm.get('name')?.dirty || addressForm.get('name')?.touched)" class="error-message">Поле обязательно</div>
+        <label for="patronymic">Отчество (при наличии)</label>
+        <input formControlName="patronymic" id="patronymic" type="text" />
+      </div>
+    </form>
+    <div class="form-navigation">
+        <button *ngIf="!isEditMode" type="button" class="back-btn" (click)="goToGet()">&lt;&lt; Назад</button>
+        <button *ngIf="!isEditMode" type="button" class="submit-btn" (click)="onSubmit()">Подтвердить данные</button>
+        <button *ngIf="isEditMode" type="button" class="submit-btn" (click)="onSave()">Сохранить</button>
+      </div>
+    <div *ngIf="errorMsg" class="error-message">{{errorMsg}}</div>
+    <div *ngIf="successMsg" class="message-box">
+      <p>{{successMsg}}</p>
+    </div>
+  </section>
+</main>

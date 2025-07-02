@@ -31,6 +31,8 @@ import { StartGetComponent } from 'src/pages/start-get/start-get.component';
 import { StartAddressComponent } from '../pages/start-address/start-address.component';
 import { AuthService } from 'src/services/auth.service';
 import { AuthInterceptor } from 'src/services/auth.interceptor';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { AdminGuard } from 'src/guards/admin.guard';
 
 const routes: Routes = [
   {path: '', component: MainPageComponent}, // Главная страница
@@ -38,19 +40,19 @@ const routes: Routes = [
   {path: 'auth/register', component: AuthorizationComponent}, // Регистрация
   {path: 'check-email', component: CheckEmailComponent}, // Отправка письма подтверждения
   {path: 'verify-email', component: VerifyEmailComponent}, // Ручка обработки подтверждения авторизации
-  {path: 'my-exchange/offers', component: MyExchangeComponent}, // Мои обмены / Предложения обмена
-  {path: 'my-exchange/give', component: MyGiveComponent}, // Мои обмены / Хочу обменять
-  {path: 'my-exchange/get', component: MyGetComponent}, // Мои обмены / Хочу получить
-  {path: 'my-exchange/active', component: MyActiveComponent}, // Мои обмены / Активные обмены
-  {path: 'my-exchange/rewiews', component: MyRewiewComponent}, // Мои обмены / Отзывы на книги
-  {path: 'my-exchange/personal', component: MyPersonalComponent}, // VМои обмены / Личные данные
-  {path: 'my-exchange/messages', component: MyMessageComponent}, // Мои обмены / Сообщения
-  {path: 'my-exchange/archive', component: MyArchiveComponent}, // Мои обмены / Архив
+  {path: 'my-exchange/offers', component: MyExchangeComponent, canActivate: [AuthGuard]}, // Мои обмены / Предложения обмена
+  {path: 'my-exchange/give', component: MyGiveComponent, canActivate: [AuthGuard]}, // Мои обмены / Хочу обменять
+  {path: 'my-exchange/get', component: MyGetComponent, canActivate: [AuthGuard]}, // Мои обмены / Хочу получить
+  {path: 'my-exchange/active', component: MyActiveComponent, canActivate: [AuthGuard]}, // Мои обмены / Активные обмены
+  {path: 'my-exchange/rewiews', component: MyRewiewComponent, canActivate: [AuthGuard]}, // Мои обмены / Отзывы на книги
+  {path: 'my-exchange/personal', component: MyPersonalComponent, canActivate: [AuthGuard]}, // VМои обмены / Личные данные
+  {path: 'my-exchange/messages', component: MyMessageComponent, canActivate: [AuthGuard]}, // Мои обмены / Сообщения
+  {path: 'my-exchange/archive', component: MyArchiveComponent, canActivate: [AuthGuard]}, // Мои обмены / Архив
   {path: 'start-exchange/give', component: StartExchangeComponent}, // Бланк обмена / Хочу обменять
   {path: 'start-exchange/get', component: StartGetComponent}, // Бланк обмена / Хочу получить
   {path: 'start-exchange/address', component: StartAddressComponent}, // Бланк обмена / Доставка
   {path: 'feedback', component: FeedbackComponent}, // Задать вопрос
-  {path: 'admin', component: AdminPanelComponent}, // Админка
+  {path: 'admin', component: AdminPanelComponent, canActivate: [AdminGuard]}, // Админка
   {path: '**', component: NotFoundErrorComponent} // Страница для ошибок
 ];
 

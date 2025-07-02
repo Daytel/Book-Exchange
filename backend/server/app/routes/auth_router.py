@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Response, Path
 from sqlalchemy.orm import Session
 from ..schemas import LoginRequest, LoginResponse, UserAuthResponse, UserCreate, UserAddressResponse, UserUpdate, UserAddressBase
 from ..models import User, Session, UserAddress
@@ -148,7 +148,52 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
         Avatar=user.Avatar,
         IsStaff=user.IsStaff
     )
-# Новый эндпоинт для получения адреса по IdUser
+
+@router.post("/register", response_model=UserAuthResponse)
+async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    # Проверка уникальности email
+    if db.query(User).filter(User.Email == user_data.Email).first():
+        raise HTTPException(status_code=400, detail="Email уже зарегистрирован")
+    # Проверка уникальности userName
+    if db.query(User).filter(User.UserName == user_data.UserName).first():
+        raise HTTPException(status_code=400, detail="UserName уже занят")
+
+    # Хешируем пароль
+    hashed_password = pwd_context.hash(user_data.Password)
+
+    # Создаем пользователя
+    new_user = User(
+        FirstName=user_data.FirstName,
+        LastName=user_data.LastName,
+        SecondName=user_data.SecondName,
+        Email=user_data.Email,
+        UserName=user_data.UserName,
+        Password=hashed_password,
+        Rating=0.0,
+        CreatedAt=datetime.utcnow(),
+        Enabled=True,
+        Avatar=None,
+        IsStaff=False
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return UserAuthResponse(
+        IdUser=new_user.IdUser,
+        FirstName=new_user.FirstName,
+        LastName=new_user.LastName,
+        SecondName=new_user.SecondName,
+        Email=new_user.Email,
+        UserName=new_user.UserName,
+        Rating=new_user.Rating,
+        CreatedAt=new_user.CreatedAt,
+        Enabled=new_user.Enabled,
+        Avatar=new_user.Avatar,
+        IsStaff=new_user.IsStaff
+    )
+
+  # Новый эндпоинт для получения адреса по IdUser
 @router.get("/address/{id}", response_model=UserAddressResponse)
 def get_address_by_id(id: int, db: Session = Depends(get_db)):
     address = db.query(UserAddress).filter(UserAddress.idUserAddress == id).first()
@@ -225,3 +270,24 @@ async def update_user(id_user: int, user_data: UserUpdate, db: Session = Depends
         Avatar=user.Avatar,
         IsStaff=user.IsStaff
     )
+
+@router.get("/user/{user_id}", response_model=UserAuthResponse)
+async def get_user_by_id(user_id: int = Path(..., description="ID пользователя"), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.IdUser == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    return UserAuthResponse(
+
+        IdUser=user.IdUser,
+        FirstName=user.FirstName,
+        LastName=user.LastName,
+        SecondName=user.SecondName,
+        Email=user.Email,
+        UserName=user.UserName,
+        Rating=user.Rating,
+        CreatedAt=user.CreatedAt,
+        Enabled=user.Enabled,
+        Avatar=user.Avatar,
+        IsStaff=user.IsStaff
+    ) 
+

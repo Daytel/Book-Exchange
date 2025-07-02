@@ -221,8 +221,7 @@ class UserExchangeListResponse(UserExchangeListBase):
 
 # --------------- Category Schemas ---------------
 class CategoryBase(BaseModel):
-    Name: str
-    IdParent: int = 0
+    Value: str
     MultySelect: bool = False
 
 class CategoryCreate(CategoryBase):
@@ -261,12 +260,24 @@ class UserListResponse(UserListBase):
 # --------------- UserValueCategory Schemas ---------------
 class UserValueCategoryBase(BaseModel):
     IdUserList: int
-    IdCategory: int
+    IdValueCategory: int
 
 class UserValueCategoryCreate(UserValueCategoryBase):
     pass
 
 class UserValueCategoryResponse(UserValueCategoryBase):
+    model_config = ConfigDict(from_attributes=True)
+
+# --------------- ValueCategory Schemas ---------------
+class ValueCategoryBase(BaseModel):
+    Value: str
+    IdCategory: int
+
+class ValueCategoryCreate(ValueCategoryBase):
+    pass
+
+class ValueCategoryResponse(ValueCategoryBase):
+    IdValueCategory: int
     model_config = ConfigDict(from_attributes=True)
 
 # --------------- Sessions ---------------

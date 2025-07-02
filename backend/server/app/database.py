@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, Session
 import os
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status, Request
-from .models import Session as SessionModel, User
+from .models import Session as SessionModel, User, OfferList, ExchangeList, UserExchangeList
 from passlib.context import CryptContext
 
 # Загрузка переменных окружения
@@ -173,6 +173,13 @@ def populate_database():
     
     print("✅ База данных успешно заполнена с хешированными паролями.")
 
+    # После заполнения всех данных:
+    db = next(get_db())
+    all_users = db.query(User).all()
+    for user in all_users:
+        recalculate_user_rating(user.IdUser, db)
+    print("Рейтинг всех пользователей пересчитан!")
+
 # Если нужно перехешировать существующих пользователей
 def hash_existing_passwords():
     db = SessionLocal()
@@ -229,3 +236,42 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
         )
     
     return session.user
+
+def recalculate_user_rating(user_id: int, db: Session):
+    # 1. Найти все OfferList пользователя
+    user_offers = db.query(OfferList.IdOfferList).filter(OfferList.IdUser == user_id).all()
+    user_offer_ids = [o[0] for o in user_offers]
+    if not user_offer_ids:
+        return
+
+    # 2. Найти все ExchangeList, где участвует хотя бы один его OfferList и IsBoth=True
+    exchanges = db.query(ExchangeList).filter(
+        ExchangeList.IsBoth == True
+    ).filter(
+        (ExchangeList.IdOfferList1.in_(user_offer_ids)) | (ExchangeList.IdOfferList2.in_(user_offer_ids))
+    ).all()
+
+    total = 0
+    successful = 0
+    for exch in exchanges:
+        # Для каждого обмена — оба предложения должны быть получены
+        uel1 = db.query(UserExchangeList).filter(
+            UserExchangeList.IdOfferList == exch.IdOfferList1,
+            UserExchangeList.Receiving == True
+        ).first()
+        uel2 = db.query(UserExchangeList).filter(
+            UserExchangeList.IdOfferList == exch.IdOfferList2,
+            UserExchangeList.Receiving == True
+        ).first()
+        if uel1 and uel2:
+            successful += 1
+        total += 1
+
+    # 3. Обновить рейтинг пользователя по 5-балльной шкале
+    user = db.query(User).filter(User.IdUser == user_id).first()
+    if total > 0:
+        rating = round((successful / total) * 5, 1)
+    else:
+        rating = 0.0
+    user.Rating = rating
+    db.commit()

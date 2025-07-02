@@ -1,1 +1,29 @@
 /* You can add global styles to this file, and also import other style files */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body, app-root, .main {
+    font-family: sans-serif;
+    background-color: #efedff;
+    color: #222;
+    line-height: 1.6;
+    font-size: 24px;
+  }
+  
+  @media screen and (min-width: 1920px) {
+    body, app-root {
+      font-size: 26px;
+    }
+  }
+  
+  @media screen and (max-width: 1366px) {
+    body, app-root {
+      font-size: 22px;
+    }
+  }
+  
+  /* Оставшиеся глобальные стили можно добавлять сюда */
