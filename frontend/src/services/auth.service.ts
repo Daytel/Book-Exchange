@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient} from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap, switchMap } from 'rxjs/operators';
 
 
 
@@ -13,7 +14,12 @@ export class AuthService {
     login(email: string, password: string): Observable<any> {
         return this.http.post(`${this.apiUrl}/auth/login`, { Email: email, Password: password }, {
             withCredentials: true
-        });
+        }).pipe(
+            tap((response: any) => {
+                // Предполагается, что токен приходит в response.access_token
+                localStorage.setItem('access_token', response.access_token);
+            })
+        );
     }
 
     // Временно закомментировано, так как эндпоинта нет
@@ -27,7 +33,9 @@ export class AuthService {
             Password: data.password
         }, {
             withCredentials: true
-        });
+        }).pipe(
+            switchMap(() => this.login(data.email, data.password))
+        );
     }
 
     logout(): Observable<any> {
@@ -71,6 +79,10 @@ export class AuthService {
         return this.http.get(`${this.apiUrl}/auth/user/${id}`, {
             withCredentials: true
         });
+    }
+
+    getToken(): string | null {
+        return localStorage.getItem('access_token');
     }
 
 }

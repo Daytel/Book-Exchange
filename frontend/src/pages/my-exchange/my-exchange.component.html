@@ -66,7 +66,14 @@
           <td><a [routerLink]="['/profile', offer.userId]" class="user-link">{{ offer.userName }}</a></td>
           <td>{{ offer.city }}</td>
           <td>рейтинг {{ offer.rating }}</td>
-          <td><button (click)="offerExchange(offer)">Предложить обмен</button></td>
+          <td>
+            <div *ngIf="offer.categories && offer.categories.length">
+              <div *ngFor="let cat of offer.categories">
+                <b>{{ cat.categoryName }}:</b> {{ cat.valueName }}
+              </div>
+            </div>
+            <button (click)="offerExchange(offer)">Предложить обмен</button>
+          </td>
         </tr>
       </table>
       <ng-template #noFull><div>Нет полных совпадений.</div></ng-template>
@@ -85,7 +92,14 @@
           <td><a [routerLink]="['/profile', offer.userId]" class="user-link">{{ offer.userName }}</a></td>
           <td>{{ offer.city }}</td>
           <td>рейтинг {{ offer.rating }}</td>
-          <td><button (click)="offerExchange(offer)">Предложить обмен</button></td>
+          <td>
+            <div *ngIf="offer.categories && offer.categories.length">
+              <div *ngFor="let cat of offer.categories">
+                <b>{{ cat.categoryName }}:</b> {{ cat.valueName }}
+              </div>
+            </div>
+            <button (click)="offerExchange(offer)">Предложить обмен</button>
+          </td>
         </tr>
       </table>
       <ng-template #noPartial><div>Нет частичных совпадений.</div></ng-template>
@@ -104,7 +118,14 @@
           <td><a [routerLink]="['/profile', offer.userId]" class="user-link">{{ offer.userName }}</a></td>
           <td>{{ offer.city }}</td>
           <td>рейтинг {{ offer.rating }}</td>
-          <td><button (click)="offerExchange(offer)">Предложить обмен</button></td>
+          <td>
+            <div *ngIf="offer.categories && offer.categories.length">
+              <div *ngFor="let cat of offer.categories">
+                <b>{{ cat.categoryName }}:</b> {{ cat.valueName }}
+              </div>
+            </div>
+            <button (click)="offerExchange(offer)">Предложить обмен</button>
+          </td>
         </tr>
       </table>
       <ng-template #noOther><div>Нет других предложений.</div></ng-template>

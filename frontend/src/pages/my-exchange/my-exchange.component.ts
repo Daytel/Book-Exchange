@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { BookService } from '../../services/book.service';
-import { AuthService } from '../../services/auth.service';
+import { BookService } from 'src/services/book.service';
+import { AuthService } from 'src/services/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -134,7 +134,27 @@ export class MyExchangeComponent implements OnInit {
   }
 
   offerExchange(offer: any) {
-    // TODO: реализовать отправку предложения обмена
-    console.log('Предложить обмен:', offer);
+    const myOfferListId = offer.myOfferListId;
+    const myWishListId = offer.myWishListId;
+    const theirOfferListId = offer.theirOfferListId;
+    const theirWishListId = offer.theirWishListId;
+
+    if (!myOfferListId || !myWishListId || !theirOfferListId || !theirWishListId) {
+      alert('Не удалось получить все необходимые данные для обмена');
+      return;
+    }
+
+    this.bookService.proposeExchange(
+      myOfferListId,
+      myWishListId,
+      theirOfferListId,
+      theirWishListId
+    ).subscribe({
+      next: () => {
+        alert('Обмен предложен!');
+        // обновить список обменов, если нужно
+      },
+      error: () => alert('Ошибка при предложении обмена')
+    });
   }
 }

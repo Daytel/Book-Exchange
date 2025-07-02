@@ -9,25 +9,25 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { NotFoundErrorComponent } from '../pages/not-found-error/not-found-error.component';
 import { MainPageComponent } from '../pages/main-page/main-page.component';
-import { AuthorizationComponent } from 'src/pages/authorization/authorization.component';
-import { MyExchangeComponent } from 'src/pages/my-exchange/my-exchange.component';
-import { StartExchangeComponent } from 'src/pages/start-exchange/start-exchange.component';
-import { CheckEmailComponent } from 'src/pages/check-email/check-email.component';
-import { VerifyEmailComponent } from 'src/pages/verify-email/verify-email.component';
+import { AuthorizationComponent } from '../pages/authorization/authorization.component';
+import { MyExchangeComponent } from '../pages/my-exchange/my-exchange.component';
+import { StartExchangeComponent } from '../pages/start-exchange/start-exchange.component';
+import { CheckEmailComponent } from '../pages/check-email/check-email.component';
+import { VerifyEmailComponent } from '../pages/verify-email/verify-email.component';
 import { FeedbackComponent } from '../pages/feedback/feedback.component';
 
 
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
-import { AdminPanelComponent } from 'src/pages/admin-panel/admin-panel.component';
-import { MyGiveComponent } from 'src/pages/my-give/my-give.component';
+import { AdminPanelComponent } from '../pages/admin-panel/admin-panel.component';
+import { MyGiveComponent } from '../pages/my-give/my-give.component';
 import { MyGetComponent } from '../pages/my-get/my-get.component';
-import { MyActiveComponent } from 'src/pages/my-active/my-active.component';
-import { MyPersonalComponent } from 'src/pages/my-personal/my-personal.component';
-import { MyRewiewComponent } from 'src/pages/my-rewiew/my-rewiew.component';
-import { MyMessageComponent } from 'src/pages/my-message/my-message.component';
-import { MyArchiveComponent } from 'src/pages/my-archive/my-archive.component';
-import { StartGetComponent } from 'src/pages/start-get/start-get.component';
+import { MyActiveComponent } from '../pages/my-active/my-active.component';
+import { MyPersonalComponent } from '../pages/my-personal/my-personal.component';
+import { MyRewiewComponent } from '../pages/my-rewiew/my-rewiew.component';
+import { MyMessageComponent } from '../pages/my-message/my-message.component';
+import { MyArchiveComponent } from '../pages/my-archive/my-archive.component';
+import { StartGetComponent } from '../pages/start-get/start-get.component';
 import { StartAddressComponent } from '../pages/start-address/start-address.component';
 import { AuthService } from 'src/services/auth.service';
 import { AuthInterceptor } from 'src/services/auth.interceptor';

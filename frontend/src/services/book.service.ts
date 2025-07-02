@@ -13,7 +13,7 @@ export class BookService {
   private wishListData: any = null;
   private addressData: any = null;
   private idAddress: number | null = null
-  private apiUrl = 'http://localhost:8000';
+  private apiUrl = 'http://localhost:8000/categories';
 
   constructor(private http: HttpClient) {}
 
@@ -98,24 +98,24 @@ export class BookService {
   }
 
   getCategories(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/categories/full`);
+    return this.http.get<any>(`${this.apiUrl}/full`);
   }
 
   getOfferListById(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}categories/offer-list/${id}`);
+    return this.http.get<any>(`${this.apiUrl}/offer-list/${id}`);
   }
 
   saveOfferList(data: any): Observable<any> {
     // Если idOfferList есть, делаем PUT, иначе POST
     if (this.idOfferList) {
-      return this.http.put(`${this.apiUrl}/categories/offer-list/${this.idOfferList}`, data).pipe(
+      return this.http.put(`${this.apiUrl}/offer-list/${this.idOfferList}`, data).pipe(
         tap(() => {
           this.clearOfferListData();
           this.clearIdOfferList();
         })
       );
     } else {
-      return this.http.post(`${this.apiUrl}/categories/offer-list`, data).pipe(
+      return this.http.post(`${this.apiUrl}/offer-list`, data).pipe(
         tap((res: any) => {
           if (res && res.IdOfferList) {
             this.clearOfferListData();
@@ -127,19 +127,19 @@ export class BookService {
   }
 
   getWishListById(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/categories/wish-list/${id}`);
+    return this.http.get<any>(`${this.apiUrl}/wish-list/${id}`);
   }
 
   saveWishList(data: any): Observable<any> {
     if (this.idWishList) {
-      return this.http.put(`${this.apiUrl}/categories/wish-list/${this.idWishList}`, data).pipe(
+      return this.http.put(`${this.apiUrl}/wish-list/${this.idWishList}`, data).pipe(
         tap(() => {
           this.clearWishListData();
           this.clearIdWishList();
         })
       );
     } else {
-      return this.http.post(`${this.apiUrl}/categories/wish-list`, data).pipe(
+      return this.http.post(`${this.apiUrl}/wish-list`, data).pipe(
         tap((res: any) => {
           if (res && res.IdWishList) {
             this.clearWishListData();
@@ -151,11 +151,11 @@ export class BookService {
   }
 
   getAddressById(id: number) {
-    return this.http.get<any>(`${this.apiUrl}/categories/address/${id}`);
+    return this.http.get<any>(`${this.apiUrl}/address/${id}`);
   }
 
   updateAddressById(id: number, data: any) {
-    return this.http.put(`${this.apiUrl}/categories/address/${id}`, data).pipe(
+    return this.http.put(`${this.apiUrl}/address/${id}`, data).pipe(
       tap(() => {
         this.clearAddressData();
         this.clearIdAddress();
@@ -164,7 +164,7 @@ export class BookService {
   }
 
   saveAddress(data: any) {
-    return this.http.post(`${this.apiUrl}/categories/address`, data).pipe(
+    return this.http.post(`${this.apiUrl}/address`, data).pipe(
       tap((res: any) => {
         this.clearAddressData();
         this.clearIdAddress();
@@ -181,6 +181,56 @@ export class BookService {
   }
 
   getExchangeMatches(userId: number) {
-    return this.http.get<any>(`${this.apiUrl}/categories/exchange-matches?IdUser=${userId}`);
+    return this.http.get<any>(`${this.apiUrl}/exchange-matches?IdUser=${userId}`);
+  }
+
+  getActiveExchanges(userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/active-exchanges?IdUser=${userId}`);
+  }
+
+  /** Подтвердить обмен */
+  confirmExchange(exchangeId: number): Observable<any> {
+    return this.http.patch(
+      `${this.apiUrl}/active-exchanges/${exchangeId}/confirm`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
+  /** Отменить обмен */
+  cancelExchange(exchangeId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/active-exchanges/${exchangeId}/cancel`);
+  }
+
+  /** Отправить трек-номер */
+  submitTracking(exchangeId: number, offerListId: number, trackNumber: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/active-exchanges/${exchangeId}/track`, null, {
+      params: {
+        offerlist_id: offerListId,
+        track_number: trackNumber
+      }
+    });
+  }
+
+  /** Подтвердить получение книги */
+  confirmReceipt(exchangeId: number, offerListId: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/active-exchanges/${exchangeId}/receive`, null, {
+      params: {
+        offerlist_id: offerListId
+      }
+    });
+  }
+
+  /** Предложить обмен */
+  proposeExchange(myOfferListId: number, myWishListId: number, theirOfferListId: number, theirWishListId: number) {
+    console.log('POST proposeExchange', myOfferListId, myWishListId, theirOfferListId, theirWishListId);
+    return this.http.post(`${this.apiUrl}/exchange/propose`, null, {
+      params: {
+        my_offerlist_id: myOfferListId,
+        my_wishlist_id: myWishListId,
+        their_offerlist_id: theirOfferListId,
+        their_wishlist_id: theirWishListId
+      }
+    });
   }
 } 

@@ -10,6 +10,7 @@ import {
 
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -18,7 +19,15 @@ export class AuthInterceptor implements HttpInterceptor {
 
     constructor(private authService: AuthService) {}
 
-    intercept(request: HttpRequest<any>, next: HttpHandler) {
+    intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+        const token = this.authService.getToken();
+        if (token) {
+            request = request.clone({
+                setHeaders: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+        }
         return next.handle(request).pipe(
             catchError((error: HttpErrorResponse) => {
                 if (error.status === 401 && !request.url.includes('/auth/')) {

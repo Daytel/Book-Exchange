@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from .database import get_db
 import os
+from .scheduler import start_scheduler
 
 # Запуск: uvicorn app.main:app --reload
 # Чистка: python app/database.py clear
@@ -55,4 +56,6 @@ app.include_router(category_router, prefix="/categories", tags=["categories"])
 @app.get("/protected-data")
 async def get_protected_data(current_user: models.User = Depends(get_current_user)):
     return {"data": "Секретные данные", "user": current_user.Email}
+
+start_scheduler()
 

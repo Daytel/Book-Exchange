@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, Query
+from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
 from sqlalchemy.orm import Session, joinedload
-from ..database import get_db
-from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList, UserAddress, User
+from ..database import get_db, get_current_user
+from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList, UserAddress, User, ExchangeList, UserExchangeList, Status
 from ..schemas import CategoryResponse, ValueCategoryResponse, UserAddressResponse, UserAddressBase
 from typing import List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 from ..database import recalculate_user_rating
 
 router = APIRouter()
@@ -265,10 +265,25 @@ def get_exchange_matches(IdUser: int = Query(...), db: Session = Depends(get_db)
             return set()
         uvc = db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).all()
         return set([v.IdValueCategory for v in uvc])
-    def offer_info(offer):
+    def offer_info(offer, my_offer=None, my_wish=None, their_offer=None, their_wish=None, db=None):
         user = offer.user
-        # Если у пользователя несколько адресов, берём первый или основной
+        their_user = None
+        if their_offer and hasattr(their_offer, 'IdUser'):
+            their_user = db.query(User).filter(User.IdUser == their_offer.IdUser).first()
         address = user.addresses[0] if hasattr(user, 'addresses') and user.addresses else None
+        user_list = db.query(UserList).filter(UserList.IdOfferList == offer.IdOfferList).first()
+        categories = []
+        if user_list:
+            uvc_list = db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).all()
+            for uvc in uvc_list:
+                value_cat = db.query(ValueCategory).filter(ValueCategory.IdValueCategory == uvc.IdValueCategory).first()
+                cat = db.query(Category).filter(Category.IdCategory == value_cat.IdCategory).first() if value_cat else None
+                categories.append({
+                    "IdCategory": value_cat.IdCategory if value_cat else None,
+                    "categoryName": cat.Value if cat else None,
+                    "IdValueCategory": value_cat.IdValueCategory if value_cat else None,
+                    "valueName": value_cat.Value if value_cat else None
+                })
         return {
             "offerId": offer.IdOfferList,
             "userId": user.IdUser,
@@ -276,42 +291,78 @@ def get_exchange_matches(IdUser: int = Query(...), db: Session = Depends(get_db)
             "avatar": getattr(user, 'Avatar', None),
             "city": address.AddrCity if address else "",
             "rating": getattr(user, 'Rating', 0),
+            "categories": categories,
+            # Новые поля для фронта:
+            "myOfferListId": my_offer.IdOfferList if my_offer else None,
+            "myWishListId": my_wish.IdWishList if my_wish else None,
+            "theirOfferListId": their_offer.IdOfferList if their_offer else offer.IdOfferList,
+            "theirWishListId": their_wish.IdWishList if their_wish else None,
+            "myUserId": IdUser,
+            "theirUserId": their_user.IdUser if their_user else None
         }
     fullMatches = []
     partialMatches = []
     otherMatches = []
-    # Для каждого чужого пользователя ищем совпадения в обе стороны
     for other_user in db.query(User).filter(User.IdUser != IdUser).all():
         other_wishlists = [w for w in wishlists if w.IdUser == other_user.IdUser]
         other_offerlists = [o for o in offerlists if o.IdUser == other_user.IdUser]
         i_want_his = False
         he_wants_mine = False
+        max_match_offer = None
+        max_match_count = 0
+        my_best_offer = None
+        my_best_wish = None
+        their_best_offer = None
+        their_best_wish = None
         # Я хочу то, что у него есть (вложенность)
         for my_wish in my_wishlists:
             my_wish_cats = get_categories(my_wish)
             for his_offer in other_offerlists:
                 his_offer_cats = get_categories(his_offer)
-                print(f"[DEBUG] User {IdUser} wish {getattr(my_wish, 'IdWishList', None)} cats: {my_wish_cats} vs User {other_user.IdUser} offer {getattr(his_offer, 'IdOfferList', None)} cats: {his_offer_cats}", flush=True)
+                if my_wish_cats and his_offer_cats:
+                    match_count = len(my_wish_cats & his_offer_cats)
+                    if match_count > max_match_count:
+                        max_match_count = match_count
+                        max_match_offer = his_offer
+                        my_best_wish = my_wish
+                        their_best_offer = his_offer
                 if my_wish_cats and his_offer_cats and my_wish_cats.issubset(his_offer_cats):
                     i_want_his = True
+                    my_best_wish = my_wish
+                    their_best_offer = his_offer
         # Он хочет то, что есть у меня (вложенность)
         for his_wish in other_wishlists:
             his_wish_cats = get_categories(his_wish)
             for my_offer in my_offerlists:
                 my_offer_cats = get_categories(my_offer)
-                print(f"[DEBUG] User {other_user.IdUser} wish {getattr(his_wish, 'IdWishList', None)} cats: {his_wish_cats} vs User {IdUser} offer {getattr(my_offer, 'IdOfferList', None)} cats: {my_offer_cats}", flush=True)
                 if his_wish_cats and my_offer_cats and his_wish_cats.issubset(my_offer_cats):
                     he_wants_mine = True
-        print(f"[DEBUG] User {IdUser} <-> User {other_user.IdUser}: i_want_his={i_want_his}, he_wants_mine={he_wants_mine}", flush=True)
+                    my_best_offer = my_offer
+                    their_best_wish = his_wish
         if i_want_his and he_wants_mine:
             for offer in other_offerlists:
-                fullMatches.append(offer_info(offer))
+                fullMatches.append(offer_info(offer, my_best_offer, my_best_wish, their_best_offer, their_best_wish, db))
         elif i_want_his or he_wants_mine:
-            for offer in other_offerlists:
-                partialMatches.append(offer_info(offer))
+            if max_match_offer:
+                partialMatches.append(offer_info(max_match_offer, my_best_offer, my_best_wish, their_best_offer, their_best_wish, db))
         else:
-            for offer in other_offerlists:
-                otherMatches.append(offer_info(offer))
+            if other_offerlists:
+                max_other_offer = None
+                max_other_count = -1
+                for his_offer in other_offerlists:
+                    match_count = 0
+                    for my_wish in my_wishlists:
+                        my_wish_cats = get_categories(my_wish)
+                        his_offer_cats = get_categories(his_offer)
+                        if my_wish_cats and his_offer_cats:
+                            match_count = max(match_count, len(my_wish_cats & his_offer_cats))
+                    if match_count > max_other_count:
+                        max_other_count = match_count
+                        max_other_offer = his_offer
+                        my_best_wish = my_wish
+                        their_best_offer = his_offer
+                if max_other_offer:
+                    otherMatches.append(offer_info(max_other_offer, my_best_offer, my_best_wish, their_best_offer, their_best_wish, db))
     # Исключаем дубли
     def unique_by_user(lst):
         seen = set()
@@ -327,4 +378,245 @@ def get_exchange_matches(IdUser: int = Query(...), db: Session = Depends(get_db)
         "fullMatches": unique_by_user(fullMatches),
         "partialMatches": unique_by_user(partialMatches),
         "otherMatches": unique_by_user(otherMatches)
-    } 
+    }
+
+@router.get("/active-exchanges")
+def get_active_exchanges(IdUser: int = Query(...), db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    user_offer_ids = [o.IdOfferList for o in db.query(OfferList).filter(OfferList.IdUser == IdUser).all()]
+    exchanges = db.query(ExchangeList).filter(
+        (ExchangeList.IdOfferList1.in_(user_offer_ids)) | (ExchangeList.IdOfferList2.in_(user_offer_ids)),
+        ExchangeList.CreateAt >= now - timedelta(days=2)
+    ).all()
+    def get_categories_for_offer(offer_id):
+        user_list = db.query(UserList).filter(UserList.IdOfferList == offer_id).first()
+        categories = []
+        if user_list:
+            uvc_list = db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).all()
+            for uvc in uvc_list:
+                value_cat = db.query(ValueCategory).filter(ValueCategory.IdValueCategory == uvc.IdValueCategory).first()
+                cat = db.query(Category).filter(Category.IdCategory == value_cat.IdCategory).first() if value_cat else None
+                categories.append({
+                    "IdCategory": value_cat.IdCategory if value_cat else None,
+                    "categoryName": cat.Value if cat else None,
+                    "IdValueCategory": value_cat.IdValueCategory if value_cat else None,
+                    "valueName": value_cat.Value if value_cat else None
+                })
+        return categories
+    result = []
+    for exch in exchanges:
+        # Определяем, с какой стороны пользователь
+        if exch.IdOfferList1 in user_offer_ids:
+            my_offer_id = exch.IdOfferList1
+            their_offer_id = exch.IdOfferList2
+            my_wishlist_id = exch.IdWishList1
+            their_wishlist_id = exch.IdWishList2
+        else:
+            my_offer_id = exch.IdOfferList2
+            their_offer_id = exch.IdOfferList1
+            my_wishlist_id = exch.IdWishList2
+            their_wishlist_id = exch.IdWishList1
+        my_offer = db.query(OfferList).filter(OfferList.IdOfferList == my_offer_id).first()
+        their_offer = db.query(OfferList).filter(OfferList.IdOfferList == their_offer_id).first()
+        # Новая логика: обмен не показываем только если оба статуса 11 или оба 15
+        if (my_offer.IdStatus == 11 and their_offer.IdStatus == 11) or (my_offer.IdStatus == 15 and their_offer.IdStatus == 15):
+            continue
+        my_user = db.query(User).filter(User.IdUser == my_offer.IdUser).first() if my_offer else None
+        their_user = db.query(User).filter(User.IdUser == their_offer.IdUser).first() if their_offer else None
+        # Книга
+        my_book = db.query(BookLiterary).filter(BookLiterary.IdBookLiterary == my_offer.IdBookLiterary).first() if my_offer else None
+        their_book = db.query(BookLiterary).filter(BookLiterary.IdBookLiterary == their_offer.IdBookLiterary).first() if their_offer else None
+        # Категории для обеих книг
+        my_categories = get_categories_for_offer(my_offer_id)
+        their_categories = get_categories_for_offer(their_offer_id)
+        my_uel = db.query(UserExchangeList).filter(UserExchangeList.IdOfferList == my_offer_id).first()
+        their_uel = db.query(UserExchangeList).filter(UserExchangeList.IdOfferList == their_offer_id).first()
+        # Получаем статусы из БД
+        my_status_obj = db.query(Status).filter(Status.IdStatus == my_offer.IdStatus).first() if my_offer else None
+        their_status_obj = db.query(Status).filter(Status.IdStatus == their_offer.IdStatus).first() if their_offer else None
+        my_status_code = my_offer.IdStatus if my_offer else None
+        their_status_code = their_offer.IdStatus if their_offer else None
+        my_status_text = my_status_obj.Name if my_status_obj else None
+        their_status_text = their_status_obj.Name if their_status_obj else None
+        # Получаем адреса для отправки книг
+        my_wishlist = db.query(WishList).filter(WishList.IdWishList == my_wishlist_id).first()
+        their_wishlist = db.query(WishList).filter(WishList.IdWishList == their_wishlist_id).first()
+        my_address = db.query(UserAddress).filter(UserAddress.idUserAddress == my_wishlist.IdUserAddress).first() if my_wishlist and my_wishlist.IdUserAddress else None
+        their_address = db.query(UserAddress).filter(UserAddress.idUserAddress == their_wishlist.IdUserAddress).first() if their_wishlist and their_wishlist.IdUserAddress else None
+        # Формируем статус для UI (оставляем для совместимости)
+        if not exch.IsBoth:
+            my_status = my_status_text or "Ожидает подтверждения"
+            partner_status = their_status_text or "Ожидает подтверждения"
+            can_confirm = True
+            can_send = False
+            can_receive = False
+        else:
+            my_status = my_status_text or "Подтвержден"
+            partner_status = their_status_text or "Подтвержден"
+            can_confirm = False
+            can_send = True if not (my_uel and my_uel.TrackNumber) else False
+            can_receive = True if (my_uel and my_uel.TrackNumber and not my_uel.Receiving) else False
+            if my_uel and my_uel.Receiving:
+                my_status = "Книга получена"
+                can_receive = False
+        # Аналогично для партнера
+        if their_uel and their_uel.Receiving:
+            partner_status = "Книга получена"
+        # Собираем результат
+        result.append({
+            "id": exch.IdExchangeList,
+            "myBook": {
+                "author": my_book.autor.LastName if my_book and my_book.autor else None,
+                "title": my_book.BookName if my_book else None,
+                "categories": my_categories,
+                "year": my_book.YearPublishing.year if my_book and my_book.YearPublishing else None
+            },
+            "theirBook": {
+                "author": their_book.autor.LastName if their_book and their_book.autor else None,
+                "title": their_book.BookName if their_book else None,
+                "categories": their_categories,
+                "year": their_book.YearPublishing.year if their_book and their_book.YearPublishing else None
+            },
+            "myStatus": my_status,
+            "partnerStatus": partner_status,
+            "myStatusCode": my_status_code,
+            "partnerStatusCode": their_status_code,
+            "myStatusText": my_status_text,
+            "partnerStatusText": their_status_text,
+            "tracking": my_uel.TrackNumber if my_uel else None,
+            "partnerTracking": their_uel.TrackNumber if their_uel else None,
+            "canConfirm": can_confirm,
+            "canSend": can_send,
+            "canReceive": can_receive,
+            "city": their_user.addresses[0].AddrCity if their_user and hasattr(their_user, 'addresses') and their_user.addresses else None,
+            "rating": getattr(their_user, 'Rating', 0) if their_user else 0,
+            "userName": their_user.UserName if their_user else None,
+            "avatar": their_user.Avatar if their_user else None,
+            "myOfferListId": my_offer_id,
+            "myWishListId": my_wishlist_id,
+            "theirOfferListId": their_offer_id,
+            "theirWishListId": their_wishlist_id,
+            "myAddress": {
+                "city": my_address.AddrCity if my_address else None,
+                "street": my_address.AddrStreet if my_address else None,
+                "house": my_address.AddrHouse if my_address else None,
+                "structure": my_address.AddrStructure if my_address else None,
+                "flat": my_address.AddrApart if my_address else None,
+                "postcode": my_address.AddrIndex if my_address else None,
+            } if my_address else None,
+            "theirAddress": {
+                "city": their_address.AddrCity if their_address else None,
+                "street": their_address.AddrStreet if their_address else None,
+                "house": their_address.AddrHouse if their_address else None,
+                "structure": their_address.AddrStructure if their_address else None,
+                "flat": their_address.AddrApart if their_address else None,
+                "postcode": their_address.AddrIndex if their_address else None,
+            } if their_address else None,
+            "myUserId": IdUser,
+            "theirUserId": their_user.IdUser if their_user else None
+        })
+    return {"exchanges": result}
+
+@router.patch("/active-exchanges/{exchange_id}/confirm")
+def confirm_exchange(exchange_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    exch = db.query(ExchangeList).filter(ExchangeList.IdExchangeList == exchange_id).first()
+    if not exch:
+        raise HTTPException(status_code=404, detail="Exchange not found")
+    # Проверяем, что текущий пользователь — владелец одного из OfferList
+    if exch.offer1.IdUser != current_user.IdUser and exch.offer2.IdUser != current_user.IdUser:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    # Меняем IsBoth на True
+    exch.IsBoth = True
+    exch.CreateAt = datetime.utcnow()
+    # Меняем статусы OfferList на 12
+    offer1 = db.query(OfferList).filter(OfferList.IdOfferList == exch.IdOfferList1).first()
+    offer2 = db.query(OfferList).filter(OfferList.IdOfferList == exch.IdOfferList2).first()
+    wish1 = db.query(WishList).filter(WishList.IdWishList == exch.IdWishList1).first()
+    wish2 = db.query(WishList).filter(WishList.IdWishList == exch.IdWishList2).first()
+    if offer1:
+        offer1.IdStatus = 12
+    if offer2:
+        offer2.IdStatus = 12
+    # Добавляем UserExchangeList для каждого OfferList, если ещё нет
+    for offer in [offer1, offer2]:
+        if offer and not db.query(UserExchangeList).filter(UserExchangeList.IdOfferList == offer.IdOfferList).first():
+            db.add(UserExchangeList(IdOfferList=offer.IdOfferList, TrackNumber=None, Receiving=False))
+    db.commit()
+    return {"status": "confirmed", "exchangeId": exchange_id, "IsBoth": True}
+
+@router.delete("/active-exchanges/{exchange_id}/cancel")
+def cancel_exchange(exchange_id: int, db: Session = Depends(get_db)):
+    exch = db.query(ExchangeList).filter(ExchangeList.IdExchangeList == exchange_id).first()
+    if not exch:
+        raise HTTPException(status_code=404, detail="Exchange not found")
+    db.delete(exch)
+    db.commit()
+    return {"status": "cancelled", "exchangeId": exchange_id}
+
+@router.patch("/active-exchanges/{exchange_id}/track")
+def submit_tracking(exchange_id: int, offerlist_id: int, track_number: str, db: Session = Depends(get_db)):
+    exch = db.query(ExchangeList).filter(ExchangeList.IdExchangeList == exchange_id).first()
+    if not exch:
+        raise HTTPException(status_code=404, detail="Exchange not found")
+    uel = db.query(UserExchangeList).filter(UserExchangeList.IdOfferList == offerlist_id).first()
+    if not uel:
+        raise HTTPException(status_code=404, detail="UserExchangeList not found")
+    uel.TrackNumber = track_number
+    # Обновляем статус OfferList на 13
+    offer = db.query(OfferList).filter(OfferList.IdOfferList == offerlist_id).first()
+    if offer:
+        offer.IdStatus = 13
+    # Проверяем, введён ли трек у второго участника
+    other_offer_id = exch.IdOfferList1 if exch.IdOfferList2 == offerlist_id else exch.IdOfferList2
+    other_uel = db.query(UserExchangeList).filter(UserExchangeList.IdOfferList == other_offer_id).first()
+    other_offer = db.query(OfferList).filter(OfferList.IdOfferList == other_offer_id).first()
+    if other_uel and other_uel.TrackNumber and offer and other_offer:
+        offer.IdStatus = 14
+        other_offer.IdStatus = 14
+        exch.CreateAt = datetime.utcnow()
+    db.commit()
+    return {"status": "track updated", "exchangeId": exchange_id}
+
+@router.patch("/active-exchanges/{exchange_id}/receive")
+def confirm_receipt(exchange_id: int, offerlist_id: int, db: Session = Depends(get_db)):
+    exch = db.query(ExchangeList).filter(ExchangeList.IdExchangeList == exchange_id).first()
+    if not exch:
+        raise HTTPException(status_code=404, detail="Exchange not found")
+    uel = db.query(UserExchangeList).filter(UserExchangeList.IdOfferList == offerlist_id).first()
+    if not uel:
+        raise HTTPException(status_code=404, detail="UserExchangeList not found")
+    uel.Receiving = True
+    # Меняем статус OfferList другого участника на 15
+    other_offer_id = exch.IdOfferList1 if exch.IdOfferList2 == offerlist_id else exch.IdOfferList2
+    other_offer = db.query(OfferList).filter(OfferList.IdOfferList == other_offer_id).first()
+    if other_offer:
+        other_offer.IdStatus = 15
+    db.commit()
+    return {"status": "received", "exchangeId": exchange_id}
+
+@router.post("/exchange/propose")
+def propose_exchange(
+    my_offerlist_id: int,
+    my_wishlist_id: int,
+    their_offerlist_id: int,
+    their_wishlist_id: int,
+    db: Session = Depends(get_db)
+):
+    # Меняем статус OfferList пользователя на 12
+    my_offer = db.query(OfferList).filter(OfferList.IdOfferList == my_offerlist_id).first()
+    if not my_offer:
+        raise HTTPException(status_code=404, detail="My OfferList not found")
+    my_offer.IdStatus = 12
+    # Добавляем запись в ExchangeList
+    exch = ExchangeList(
+        IdOfferList1=my_offerlist_id,
+        IdWishList1=my_wishlist_id,
+        IdOfferList2=their_offerlist_id,
+        IdWishList2=their_wishlist_id,
+        CreateAt=datetime.utcnow(),
+        IsBoth=False
+    )
+    db.add(exch)
+    db.commit()
+    db.refresh(exch)
+    return {"status": "proposed", "exchangeId": exch.IdExchangeList} 

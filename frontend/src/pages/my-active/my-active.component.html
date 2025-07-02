@@ -1,1 +1,142 @@
-<p>my-active works!</p>
+<header class="header">
+  <div class="logo">
+    <img src="assets/logo.png" alt="Логотип">
+  </div>
+  <nav class="nav">
+    <a routerLink="/">Главная</a>
+    <a routerLink="/start-exchange/give">Начать обмен</a>
+    <a *ngIf="isLoggedIn; else noAccess" routerLink="/my-exchange/offers">Мои обмены</a>
+    <ng-template #noAccess>
+      <a href="#" class="disabled-link" (click)="showAuthAlert($event)">Мои обмены</a>
+    </ng-template>
+    <a routerLink="/feedback">Задать вопрос</a>
+  </nav>
+  <div class="auth" *ngIf="!isLoggedIn">
+    <a routerLink="/auth/login" class="auth-link">Авторизоваться</a>
+    <span class="separator">|</span>
+    <a routerLink="/auth/register" class="auth-link">Регистрация</a>
+  </div>
+  <div class="auth" *ngIf="isLoggedIn">
+    <div class="user-info" (click)="goToProfile()" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+      <img *ngIf="avatar" [src]="avatar" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <span>{{ userName }}</span>
+    </div>
+    <button class="auth-link" style="margin-left:1rem;" (click)="logout()">Выйти</button>
+  </div>
+</header>
+
+<div class="main-container">
+  <div class="user-profile">
+    <div class="user-info">
+      <div class="avatar">
+        <img [src]="userAvatar" alt="Аватар">
+      </div>
+      <a routerLink="/my-exchange/personal" class="username">{{ userName }}</a>
+      <div class="rating">рейтинг {{ userRating }}</div>
+    </div>
+    <ul class="menu">
+      <li><a routerLink="/my-exchange/offers">Предложения для обмена</a></li>
+      <li><a routerLink="/my-exchange/give">Хочу обменять</a></li>
+      <li><a routerLink="/my-exchange/get">Хочу получить</a></li>
+      <li><a routerLink="/my-exchange/active" class="active">Активные обмены</a></li>
+      <li><a routerLink="/my-exchange/review">Отзывы на книги</a></li>
+      <li><a routerLink="/my-exchange/personal">Личные данные</a></li>
+      <li><a routerLink="/my-exchange/message">Сообщения</a></li>
+      <li><a routerLink="/my-exchange/archive">Архив</a></li>
+    </ul>
+  </div>
+  <div class="content">
+    <h1 class="section-title">Активные обмены</h1>
+    <div class="search-status">
+      Найдено {{ activeExchanges.length }} активных обмена. Обновлено: {{ lastUpdate | date:'dd.MM.yyyy HH:mm' }}
+    </div>
+    <div class="offers-list">
+      <div class="offer-item" *ngFor="let exchange of activeExchanges" [class.expanded]="exchange.expanded" (click)="toggleDetails(exchange)">
+        <div class="offer-main">
+          <div class="offer-user-info">
+            <div class="avatar" style="width:60px;height:60px;display:inline-block;vertical-align:middle;margin-right:1rem;">
+              <img [src]="exchange.avatar ? ('data:image/jpeg;base64,' + exchange.avatar) : 'assets/avatar.jpg'" alt="Аватар" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            </div>
+            <span class="user-link" style="font-weight:bold;font-size:1.1em;vertical-align:middle;">{{ exchange.userName }}</span>
+            <span class="user-status-text" style="margin-left:0.7em;color:#888;font-size:0.95em;">{{ exchange.partnerStatusText }}</span>
+            <div class="user-city">{{ exchange.city }}</div>
+            <span class="user-rating">рейтинг {{ exchange.rating }}</span>
+          </div>
+          <div class="offer-book-info">
+            <div>Моя книга:
+              <span class="book-title" style="color:#0066cc; font-weight:bold;">{{ exchange.myBook.author }}</span>
+            </div>
+            <div>"{{ exchange.myBook.title }}"</div>
+          </div>
+        </div>
+        <div class="offer-details" *ngIf="exchange.expanded">
+          <div class="details-content">
+            <div class="details-left">
+              <div class="details-title">Предлагаемая книга:</div>
+              <ng-container *ngIf="exchange.theirBook.categories && exchange.theirBook.categories.length; else noTheirCats">
+                <div class="book-property" *ngFor="let cat of exchange.theirBook.categories">
+                  <span class="property-name">{{ cat.categoryName }}:</span> {{ cat.valueName }}
+                </div>
+              </ng-container>
+              <ng-template #noTheirCats>
+                <div class="book-property">Нет категорий</div>
+              </ng-template>
+            </div>
+            <div class="details-right">
+              <div class="details-title">Моя книга:</div>
+              <ng-container *ngIf="exchange.myBook.categories && exchange.myBook.categories.length; else noMyCats">
+                <div class="book-property" *ngFor="let cat of exchange.myBook.categories">
+                  <span class="property-name">{{ cat.categoryName }}:</span> {{ cat.valueName }}
+                </div>
+              </ng-container>
+              <ng-template #noMyCats>
+                <div class="book-property">Нет категорий</div>
+              </ng-template>
+            </div>
+          </div>
+          <div class="exchange-status">
+            <div class="status-section">
+              <div class="status-title">Мой статус:</div>
+              <div class="status-value" [ngClass]="{'pending': exchange.myStatus === 'Ожидает подтверждения', 'confirmed': exchange.myStatus === 'Подтвержден' || exchange.myStatus === 'Книга получена'}">{{ exchange.myStatus }}</div>
+              <div class="tracking-input" *ngIf="exchange.myStatus === 'Подтвержден' && exchange.canSend">
+                <input type="text" maxlength="14" pattern="\d{14}" #trackInput (click)="$event.stopPropagation()">
+                <button [disabled]="!trackInput.value || trackInput.value.length !== 14" (click)="submitTracking(exchange, trackInput.value); $event.stopPropagation()">Отправил</button>
+              </div>
+              <div class="tracking-number" *ngIf="exchange.tracking">Мой трек-номер: {{ exchange.tracking }}</div>
+              <button *ngIf="canReceiveBook(exchange)" class="action-btn received" (click)="confirmReceipt(exchange); $event.stopPropagation()">Получил</button>
+            </div>
+            <div class="status-section">
+              <div class="status-title">Статус партнера:</div>
+              <div class="status-value" [ngClass]="{'pending': exchange.partnerStatus === 'Ожидает подтверждения', 'confirmed': exchange.partnerStatus === 'Подтвержден' || exchange.partnerStatus === 'Книга получена'}">{{ exchange.partnerStatus }}</div>
+              <div class="tracking-number" *ngIf="exchange.partnerTracking">Трек-номер партнера: {{ exchange.partnerTracking }}</div>
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button *ngIf="canConfirmExchange(exchange)" (click)="confirmExchange(exchange); $event.stopPropagation()">Подтвердить</button>
+            <button *ngIf="exchange.canConfirm && isMyExchange(exchange)" (click)="cancelExchange(exchange); $event.stopPropagation()">Отменить</button>
+          </div>
+          <div *ngIf="exchange.canSend">
+            <label>
+              Введите трек-номер:
+              <input [(ngModel)]="exchange.trackInput" placeholder="Трек-номер" (click)="$event.stopPropagation()">
+            </label>
+            <button (click)="submitTracking(exchange, exchange.trackInput); $event.stopPropagation()">Подтвердить</button>
+          </div>
+          <div *ngIf="exchange.tracking">
+            <b>Ваш трек-номер:</b> {{ exchange.tracking }}
+          </div>
+          <div *ngIf="exchange.myStatusCode === 12 && exchange.partnerStatusCode === 12">
+            <h4>Адрес для отправки книги:</h4>
+            <div *ngIf="exchange.theirAddress">
+              <div>
+                {{ exchange.theirAddress.postcode }}, {{ exchange.theirAddress.city }}, {{ exchange.theirAddress.street }}, д.{{ exchange.theirAddress.house }}
+                <span *ngIf="exchange.theirAddress.structure">, корп.{{ exchange.theirAddress.structure }}</span>
+                <span *ngIf="exchange.theirAddress.flat">, кв.{{ exchange.theirAddress.flat }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
