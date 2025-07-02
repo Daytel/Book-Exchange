@@ -1,0 +1,254 @@
+/* Импортированы стили из moiob.css, адаптированы для компонента */
+.header {
+  display: flex;
+  font-size: 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 1px solid #ccc;
+}
+.logo img {
+  height: 50px;
+}
+.nav {
+  display: flex;
+  gap: 1.5rem;
+}
+.nav a {
+  text-decoration: none;
+  color: black;
+  font-weight: 500;
+  position: relative;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.nav a:hover {
+  transform: translateY(-4px);
+}
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.auth-link {
+  text-decoration: none;
+  font-weight: bold;
+  color: black;
+  font-size: 20px;
+  border: 1px solid black;
+  padding: 0.5rem 1rem;
+  transition: background 0.3s, color 0.3s;
+  background: white;
+  cursor: pointer;
+}
+.auth-link:hover {
+  background-color: black;
+  color: white;
+}
+.separator {
+  font-weight: bold;
+  margin: 0 0.2rem;
+  color: #555;
+}
+.disabled-link {
+  color: #aaa !important;
+  pointer-events: none;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.header-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ccc;
+  overflow: hidden;
+}
+.header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.header-username {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  font-size: 20px;
+}
+.main-container {
+  display: flex;
+  padding: 2rem;
+  gap: 2rem;
+}
+.user-profile {
+  width: 300px;
+  background-color: #fffdd0;
+  padding: 1.5rem;
+  border-radius: 8px;
+  height: fit-content;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #ccc;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.username {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  text-decoration: none;
+  color: black;
+}
+.rating {
+  color: #555;
+  font-size: 0.8em;
+}
+.menu {
+  list-style: none;
+}
+.menu li {
+  margin-bottom: 0.8rem;
+}
+.menu a {
+  text-decoration: none;
+  color: black;
+  display: block;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+.menu a:hover {
+  background-color: #f0f0f0;
+}
+.menu a.active {
+  background-color: #e0e0e0;
+  font-weight: bold;
+}
+.content {
+  flex: 1;
+  background-color: #fffbe9;
+  padding: 2rem;
+  border-radius: 8px;
+}
+.section-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.2em;
+}
+.offers-section {
+  margin-bottom: 2rem;
+}
+.offers-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+.offers-table th, .offers-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+.offers-table th {
+  background-color: #f5f5f5;
+}
+.user-link {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+}
+.refresh-countdown {
+  color: #888;
+  animation: blink 1s linear infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+@media screen and (max-width: 1024px) {
+  .main-container {
+    flex-direction: column;
+  }
+  .user-profile {
+    width: 100%;
+  }
+  .user-info {
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+  }
+  .avatar {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 0;
+  }
+  .menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .menu li {
+    margin-bottom: 0;
+  }
+  .menu a {
+    padding: 0.5rem 1rem;
+  }
+}
+@media screen and (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .user-header {
+    margin-top: 1rem;
+  }
+  .main-container {
+    padding: 1rem;
+  }
+  .content {
+    padding: 1rem;
+  }
+  .offers-table th, .offers-table td {
+    padding: 0.5rem;
+    font-size: 0.8em;
+  }
+}
+@media screen and (max-width: 480px) {
+  .offers-table {
+    display: block;
+    overflow-x: auto;
+  }
+  .menu {
+    flex-direction: column;
+  }
+  .header {
+    align-items: flex-start;
+  }
+  .user-header {
+    align-self: flex-end;
+  }
+}

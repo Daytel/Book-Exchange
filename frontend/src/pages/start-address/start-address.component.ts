@@ -111,7 +111,13 @@ export class StartAddressComponent implements OnInit {
     this.bookService.saveAddress(addressData).subscribe({
       next: (res: any) => {
         if (res && res.idUserAddress) {
-          // Отправляем все данные (адрес, offerList, wishList)
+          // Подставляем id адреса в wishListData через геттер/сеттер
+          const wishListData = this.bookService.getWishListData();
+          if (wishListData) {
+            wishListData.IdUserAddress = res.idUserAddress;
+            this.bookService.setWishListData(wishListData);
+          }
+          // Теперь отправляем offerList и wishList
           this.bookService.sendFullExchange().subscribe({
             next: () => {
               this.successMsg = 'Заявка создана!';

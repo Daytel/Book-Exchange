@@ -22,6 +22,7 @@ class User(Base):
     Enabled = Column(Boolean, default=True)
     Avatar = Column(LargeBinary)
     IsStaff = Column(Boolean, default=False)
+    offerlists = relationship("OfferList", back_populates="user")
 
     # Методы для работы с паролем
     def set_password(self, password: str):
@@ -45,6 +46,10 @@ class User(Base):
         CheckConstraint('Email LIKE "%@%"', name='valid_email'),
     )
     
+    # Добавьте связь с адресами (один-ко-многим)
+    addresses = relationship("UserAddress", backref="user")
+    # Если нужен только один адрес (например, основной):
+    main_address = relationship("UserAddress", uselist=False, primaryjoin="User.IdUser==UserAddress.IdUser")
 
 class Autor(Base):
     __tablename__ = 'Autor'
@@ -82,7 +87,7 @@ class OfferList(Base):
     IdStatus = Column(Integer, ForeignKey('Status.IdStatus'), nullable=False)
     
     book = relationship("BookLiterary")
-    user = relationship("User")
+    user = relationship("User", back_populates="offerlists")
     status = relationship("Status")
 
 class UserAddress(Base):

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Body, Query
+from sqlalchemy.orm import Session, joinedload
 from ..database import get_db
-from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList, UserAddress
+from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList, UserAddress, User
 from ..schemas import CategoryResponse, ValueCategoryResponse, UserAddressResponse, UserAddressBase
 from typing import List, Dict, Any
 from datetime import datetime
+from ..database import recalculate_user_rating
 
 router = APIRouter()
 
@@ -94,7 +95,12 @@ def create_offer_list(data: dict = Body(...), db: Session = Depends(get_db)):
     # Сохраняем выбранные категории
     for cat in data['categories']:
         for val_id in cat['selected']:
-            db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdValueCategory=val_id))
+            # Если вдруг вложенный массив, разворачиваем все значения
+            if isinstance(val_id, list):
+                for sub_id in val_id:
+                    db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdValueCategory=sub_id))
+            else:
+                db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdValueCategory=val_id))
     db.commit()
     return {"IdOfferList": offer.IdOfferList}
 
@@ -121,6 +127,8 @@ def update_offer_list(id: int, data: dict = Body(...), db: Session = Depends(get
             for val_id in cat['selected']:
                 db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdValueCategory=val_id))
         db.commit()
+    # После обновления статуса — пересчитать рейтинг пользователя
+    recalculate_user_rating(offer.IdUser, db)
     return {"IdOfferList": id, "status": "updated"}
 
 @router.post("/wish-list")
@@ -232,4 +240,91 @@ def create_address(data: UserAddressBase, db: Session = Depends(get_db)):
     db.add(address)
     db.commit()
     db.refresh(address)
-    return {"idUserAddress": address.idUserAddress} 
+    return {"idUserAddress": address.idUserAddress}
+
+@router.get("/exchange-matches")
+def get_exchange_matches(IdUser: int = Query(...), db: Session = Depends(get_db)):
+    # Пересчитываем рейтинг для всех пользователей, участвующих в обменах (включая себя)
+    user_ids = [u.IdUser for u in db.query(User).all()]
+    for uid in user_ids:
+        recalculate_user_rating(uid, db)
+    # Получаем все WishList и OfferList других пользователей
+    wishlists = db.query(WishList).filter(WishList.IdUser != IdUser).all()
+    offerlists = db.query(OfferList).filter(OfferList.IdUser != IdUser).all()
+    # Получаем свои WishList и OfferList
+    my_wishlists = db.query(WishList).filter(WishList.IdUser == IdUser).all()
+    my_offerlists = db.query(OfferList).filter(OfferList.IdUser == IdUser).all()
+    # Собираем категории для своих списков
+    def get_categories(userlist):
+        user_list = None
+        if hasattr(userlist, 'IdWishList') and getattr(userlist, 'IdWishList', None):
+            user_list = db.query(UserList).filter(UserList.IdWishList == userlist.IdWishList).first()
+        elif hasattr(userlist, 'IdOfferList') and getattr(userlist, 'IdOfferList', None):
+            user_list = db.query(UserList).filter(UserList.IdOfferList == userlist.IdOfferList).first()
+        if not user_list:
+            return set()
+        uvc = db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).all()
+        return set([v.IdValueCategory for v in uvc])
+    def offer_info(offer):
+        user = offer.user
+        # Если у пользователя несколько адресов, берём первый или основной
+        address = user.addresses[0] if hasattr(user, 'addresses') and user.addresses else None
+        return {
+            "offerId": offer.IdOfferList,
+            "userId": user.IdUser,
+            "userName": user.UserName,
+            "avatar": getattr(user, 'Avatar', None),
+            "city": address.AddrCity if address else "",
+            "rating": getattr(user, 'Rating', 0),
+        }
+    fullMatches = []
+    partialMatches = []
+    otherMatches = []
+    # Для каждого чужого пользователя ищем совпадения в обе стороны
+    for other_user in db.query(User).filter(User.IdUser != IdUser).all():
+        other_wishlists = [w for w in wishlists if w.IdUser == other_user.IdUser]
+        other_offerlists = [o for o in offerlists if o.IdUser == other_user.IdUser]
+        i_want_his = False
+        he_wants_mine = False
+        # Я хочу то, что у него есть (вложенность)
+        for my_wish in my_wishlists:
+            my_wish_cats = get_categories(my_wish)
+            for his_offer in other_offerlists:
+                his_offer_cats = get_categories(his_offer)
+                print(f"[DEBUG] User {IdUser} wish {getattr(my_wish, 'IdWishList', None)} cats: {my_wish_cats} vs User {other_user.IdUser} offer {getattr(his_offer, 'IdOfferList', None)} cats: {his_offer_cats}", flush=True)
+                if my_wish_cats and his_offer_cats and my_wish_cats.issubset(his_offer_cats):
+                    i_want_his = True
+        # Он хочет то, что есть у меня (вложенность)
+        for his_wish in other_wishlists:
+            his_wish_cats = get_categories(his_wish)
+            for my_offer in my_offerlists:
+                my_offer_cats = get_categories(my_offer)
+                print(f"[DEBUG] User {other_user.IdUser} wish {getattr(his_wish, 'IdWishList', None)} cats: {his_wish_cats} vs User {IdUser} offer {getattr(my_offer, 'IdOfferList', None)} cats: {my_offer_cats}", flush=True)
+                if his_wish_cats and my_offer_cats and his_wish_cats.issubset(my_offer_cats):
+                    he_wants_mine = True
+        print(f"[DEBUG] User {IdUser} <-> User {other_user.IdUser}: i_want_his={i_want_his}, he_wants_mine={he_wants_mine}", flush=True)
+        if i_want_his and he_wants_mine:
+            for offer in other_offerlists:
+                fullMatches.append(offer_info(offer))
+        elif i_want_his or he_wants_mine:
+            for offer in other_offerlists:
+                partialMatches.append(offer_info(offer))
+        else:
+            for offer in other_offerlists:
+                otherMatches.append(offer_info(offer))
+    # Исключаем дубли
+    def unique_by_user(lst):
+        seen = set()
+        res = []
+        for x in lst:
+            uid = x['userId']
+            if uid not in seen:
+                seen.add(uid)
+                res.append(x)
+        return res
+
+    return {
+        "fullMatches": unique_by_user(fullMatches),
+        "partialMatches": unique_by_user(partialMatches),
+        "otherMatches": unique_by_user(otherMatches)
+    } 

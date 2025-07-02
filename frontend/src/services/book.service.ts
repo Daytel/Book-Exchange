@@ -108,14 +108,19 @@ export class BookService {
   saveOfferList(data: any): Observable<any> {
     // Если idOfferList есть, делаем PUT, иначе POST
     if (this.idOfferList) {
-      return this.http.put(`${this.apiUrl}categories/offer-list/${this.idOfferList}`, data).pipe(
-        // После успешного запроса сбрасываем idOfferList
-        tap(() => this.clearIdOfferList())
+      return this.http.put(`${this.apiUrl}/categories/offer-list/${this.idOfferList}`, data).pipe(
+        tap(() => {
+          this.clearOfferListData();
+          this.clearIdOfferList();
+        })
       );
     } else {
       return this.http.post(`${this.apiUrl}/categories/offer-list`, data).pipe(
         tap((res: any) => {
-          if (res && res.IdOfferList) this.clearIdOfferList();
+          if (res && res.IdOfferList) {
+            this.clearOfferListData();
+            this.clearIdOfferList();
+          }
         })
       );
     }
@@ -128,12 +133,18 @@ export class BookService {
   saveWishList(data: any): Observable<any> {
     if (this.idWishList) {
       return this.http.put(`${this.apiUrl}/categories/wish-list/${this.idWishList}`, data).pipe(
-        tap(() => this.clearIdWishList())
+        tap(() => {
+          this.clearWishListData();
+          this.clearIdWishList();
+        })
       );
     } else {
       return this.http.post(`${this.apiUrl}/categories/wish-list`, data).pipe(
         tap((res: any) => {
-          if (res && res.IdWishList) this.clearIdWishList();
+          if (res && res.IdWishList) {
+            this.clearWishListData();
+            this.clearIdWishList();
+          }
         })
       );
     }
@@ -144,11 +155,21 @@ export class BookService {
   }
 
   updateAddressById(id: number, data: any) {
-    return this.http.put(`${this.apiUrl}/categories/address/${id}`, data);
+    return this.http.put(`${this.apiUrl}/categories/address/${id}`, data).pipe(
+      tap(() => {
+        this.clearAddressData();
+        this.clearIdAddress();
+      })
+    );
   }
 
   saveAddress(data: any) {
-    return this.http.post(`${this.apiUrl}/categories/address`, data);
+    return this.http.post(`${this.apiUrl}/categories/address`, data).pipe(
+      tap((res: any) => {
+        this.clearAddressData();
+        this.clearIdAddress();
+      })
+    );
   }
 
   sendFullExchange(): Observable<any> {
@@ -157,5 +178,9 @@ export class BookService {
       offerList: this.saveOfferList(this.offerListData),
       wishList: this.saveWishList(this.wishListData)
     });
+  }
+
+  getExchangeMatches(userId: number) {
+    return this.http.get<any>(`${this.apiUrl}/categories/exchange-matches?IdUser=${userId}`);
   }
 } 
