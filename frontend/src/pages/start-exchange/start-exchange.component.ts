@@ -16,6 +16,7 @@ export class StartExchangeComponent implements OnInit {
   isLoggedIn = false;
   userName: string | null = null;
   avatar: string | null = null;
+  isEditMode = false;
 
   constructor(
     private fb: FormBuilder,
@@ -59,8 +60,39 @@ export class StartExchangeComponent implements OnInit {
         }
         cat.open = false;
       });
-      // --- автозаполнение, если есть IdOfferList ---
-      const offerListId = this.bookService.getOfferListData()?.IdOfferList;
+      // --- сначала пробуем локальный offerListData ---
+      const localOffer = this.bookService.getOfferListData();
+      if (localOffer && localOffer.book && localOffer.categories) {
+        this.exchangeForm.patchValue({
+          authorLastName: localOffer.book.authorLastName || '',
+          authorFirstName: localOffer.book.authorFirstName || '',
+          bookTitle: localOffer.book.bookTitle || '',
+          isbn: localOffer.book.isbn || '',
+          year: localOffer.book.year || ''
+        });
+        localOffer.categories.forEach((cat: any) => {
+          const localCat = this.categories.find((c: any) => c.IdCategory === cat.IdCategory);
+          if (localCat) {
+            if (localCat.MultySelect) {
+              localCat.values.forEach((v: any) => {
+                v.selected = Array.isArray(cat.selected)
+                  ? cat.selected.some((id: any) => id === v.IdValueCategory)
+                  : cat.selected === v.IdValueCategory;
+              });
+            } else {
+              if (Array.isArray(cat.selected) && cat.selected.length > 0) {
+                localCat.selected = cat.selected[0];
+              } else if (cat.selected) {
+                localCat.selected = cat.selected;
+              }
+            }
+          }
+        });
+        this.isEditMode = false;
+        return;
+      }
+      // --- если нет локального, пробуем по idOfferList ---
+      const offerListId = this.bookService.getIdOfferList();
       if (offerListId) {
         this.bookService.getOfferListById(offerListId).subscribe((offer: any) => {
           if (offer && offer.book) {
@@ -72,20 +104,17 @@ export class StartExchangeComponent implements OnInit {
               year: offer.book.year || ''
             });
           }
-          // --- автозаполнение выбранных категорий ---
           if (offer && offer.categories && Array.isArray(offer.categories)) {
             offer.categories.forEach((cat: any) => {
               const localCat = this.categories.find((c: any) => c.IdCategory === cat.IdCategory);
               if (localCat) {
                 if (localCat.MultySelect) {
-                  // Для мультивыбора отмечаем соответствующие значения
                   localCat.values.forEach((v: any) => {
                     v.selected = Array.isArray(cat.IdValueCategory)
                       ? cat.IdValueCategory.some((id: any) => id === v.IdValueCategory)
                       : cat.IdValueCategory === v.IdValueCategory;
                   });
                 } else {
-                  // Для одиночного выбора
                   if (Array.isArray(cat.IdValueCategory) && cat.IdValueCategory.length > 0) {
                     localCat.selected = cat.IdValueCategory[0];
                   } else if (cat.IdValueCategory) {
@@ -94,8 +123,11 @@ export class StartExchangeComponent implements OnInit {
                 }
               }
             });
+            this.isEditMode = true;
           }
         });
+      } else {
+        this.isEditMode = false;
       }
     });
   }
@@ -148,7 +180,24 @@ export class StartExchangeComponent implements OnInit {
       book: this.exchangeForm.value,
       categories: selectedCategories
     };
-    this.bookService.setBookData(offerListData);
-    // Здесь можно добавить переход на следующий шаг или другое действие
+    this.bookService.setOfferListData(offerListData);
+    // Если не режим редактирования, переходим к start-get
+    if (!this.isEditMode) {
+      this.router.navigate(['/start-exchange/get']);
+    }
+    // В режиме редактирования можно добавить сохранение через saveOfferList
+  }
+
+  showAuthAlert(event: Event) {
+    event.preventDefault();
+    alert('Для доступа к разделу "Мои обмены" необходимо авторизоваться!');
+  }
+
+  goToAddress() {
+    this.router.navigate(['start-exchange/address']);
+  }
+
+  goToGet() {
+    this.router.navigate(['start-exchange/get']);
   }
 } 

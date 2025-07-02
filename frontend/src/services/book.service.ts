@@ -8,6 +8,8 @@ export class BookService {
   private bookData: any = null;
   private offerListData: any = null;
   private idOfferList: number | null = null;
+  private idWishList: number | null = null;
+  private wishListData: any = null;
   private apiUrl = 'http://localhost:8000';
 
   constructor(private http: HttpClient) {}
@@ -44,6 +46,30 @@ export class BookService {
     this.idOfferList = null;
   }
 
+  setIdWishList(id: number) {
+    this.idWishList = id;
+  }
+
+  getIdWishList(): number | null {
+    return this.idWishList;
+  }
+
+  clearIdWishList() {
+    this.idWishList = null;
+  }
+
+  setWishListData(data: any) {
+    this.wishListData = data;
+  }
+
+  getWishListData() {
+    return this.wishListData;
+  }
+
+  clearWishListData() {
+    this.wishListData = null;
+  }
+
   getCategories(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/categories/full`);
   }
@@ -63,6 +89,24 @@ export class BookService {
       return this.http.post(`${this.apiUrl}/offer-list`, data).pipe(
         tap((res: any) => {
           if (res && res.IdOfferList) this.clearIdOfferList();
+        })
+      );
+    }
+  }
+
+  getWishListById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/wish-list/${id}`);
+  }
+
+  saveWishList(data: any): Observable<any> {
+    if (this.idWishList) {
+      return this.http.put(`${this.apiUrl}/wish-list/${this.idWishList}`, data).pipe(
+        tap(() => this.clearIdWishList())
+      );
+    } else {
+      return this.http.post(`${this.apiUrl}/wish-list`, data).pipe(
+        tap((res: any) => {
+          if (res && res.IdWishList) this.clearIdWishList();
         })
       );
     }

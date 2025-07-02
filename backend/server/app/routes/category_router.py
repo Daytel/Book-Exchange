@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory
+from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList
 from ..schemas import CategoryResponse, ValueCategoryResponse
 from typing import List, Dict, Any
 from datetime import datetime
@@ -121,4 +121,68 @@ def update_offer_list(id: int, data: dict = Body(...), db: Session = Depends(get
             for val_id in cat['selected']:
                 db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdCategory=cat['IdCategory']))
         db.commit()
-    return {"IdOfferList": id, "status": "updated"} 
+    return {"IdOfferList": id, "status": "updated"}
+
+@router.post("/wish-list")
+def create_wish_list(data: dict = Body(...), db: Session = Depends(get_db)):
+    # TODO: получить IdUser и IdUserAddress из сессии/формы
+    wish = WishList(
+        IdUser=1,
+        CreatedAt=datetime.utcnow(),
+        UpdateAt=datetime.utcnow(),
+        IdStatus=1,
+        IdUserAddress=1
+    )
+    db.add(wish)
+    db.commit()
+    db.refresh(wish)
+    # Создаём UserList
+    user_list = UserList(IdWishList=wish.IdWishList)
+    db.add(user_list)
+    db.commit()
+    db.refresh(user_list)
+    # Сохраняем выбранные категории
+    for cat in data['categories']:
+        for val_id in cat['selected']:
+            db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdCategory=cat['IdCategory']))
+    db.commit()
+    return {"IdWishList": wish.IdWishList}
+
+@router.put("/wish-list/{id}")
+def update_wish_list(id: int, data: dict = Body(...), db: Session = Depends(get_db)):
+    wish = db.query(WishList).filter(WishList.IdWishList == id).first()
+    if not wish:
+        raise HTTPException(status_code=404, detail="WishList not found")
+    wish.UpdateAt = datetime.utcnow()
+    db.commit()
+    # Обновляем категории
+    user_list = db.query(UserList).filter(UserList.IdWishList == id).first()
+    if user_list:
+        db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).delete()
+        for cat in data['categories']:
+            for val_id in cat['selected']:
+                db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdCategory=cat['IdCategory']))
+        db.commit()
+    return {"IdWishList": id, "status": "updated"}
+
+@router.get("/wish-list/{id}")
+def get_wish_list_by_id(id: int, db: Session = Depends(get_db)):
+    wish = db.query(WishList).filter(WishList.IdWishList == id).first()
+    if not wish:
+        raise HTTPException(status_code=404, detail="WishList not found")
+    user_list = db.query(UserList).filter(UserList.IdWishList == id).first()
+    selected_categories = []
+    if user_list:
+        user_value_cats = db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).all()
+        for uvc in user_value_cats:
+            selected_categories.append({
+                "IdCategory": uvc.IdCategory,
+                # Получаем IdValueCategory для этой категории
+                "IdValueCategory": db.query(ValueCategory.IdValueCategory).filter(
+                    ValueCategory.IdCategory == uvc.IdCategory
+                ).all()
+            })
+    return {
+        "IdWishList": wish.IdWishList,
+        "categories": selected_categories
+    } 
