@@ -1,3 +1,6 @@
+<div *ngIf="errorMessage" class="error-message" style="text-align: center; margin-bottom: 20px;">
+  {{ errorMessage }}
+</div>
 <form [formGroup]="personalForm" (ngSubmit)="saveChanges()" novalidate>
   <div class="container">
     <h1>Редактирование личных данных</h1>
@@ -78,8 +81,8 @@
     </div>
 
     <div class="form-group">
-      <label for="confirm-password">Подтверждение пароля*</label>
-      <input type="password" id="confirm-password" formControlName="confirmPassword"
+      <label for="confirmPassword">Подтверждение пароля*</label>
+      <input type="password" id="confirmPassword" formControlName="confirmPassword"
              [class.invalid]="personalForm.get('confirmPassword')?.invalid && personalForm.get('confirmPassword')?.touched">
       <div class="error-message" *ngIf="personalForm.hasError('mismatch') && personalForm.get('confirmPassword')?.touched">
         Пароли не совпадают
