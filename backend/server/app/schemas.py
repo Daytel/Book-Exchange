@@ -44,6 +44,16 @@ class UserLogin(BaseModel):
 class UserCreate(UserBase):
     pass
 
+# Схема для обновления пользователя
+class UserUpdate(BaseModel):
+    FirstName: str
+    LastName: str
+    SecondName: Optional[str] = None
+    Email: str
+    UserName: str
+    Password: str
+    Avatar: Optional[str] = None
+
 class UserResponse(UserBase):
     IdUser: int
     model_config = ConfigDict(from_attributes=True)

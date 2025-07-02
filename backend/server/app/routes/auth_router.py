@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Response, Path
 from sqlalchemy.orm import Session
-from ..schemas import LoginRequest, LoginResponse, UserAuthResponse, UserCreate
-from ..models import User, Session
+from ..schemas import LoginRequest, LoginResponse, UserAuthResponse, UserCreate, UserAddressResponse, UserUpdate, UserAddressBase
+from ..models import User, Session, UserAddress
 from ..database import get_db
 from ..auth_utils import SESSION_EXPIRE_HOURS, create_session_token, get_session_expiration
 from passlib.context import CryptContext
 from datetime import datetime
+import base64
 
 router = APIRouter()
 
@@ -192,11 +193,70 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
         IsStaff=new_user.IsStaff
     )
 
-@router.get("/user/{user_id}", response_model=UserAuthResponse)
-async def get_user_by_id(user_id: int = Path(..., description="ID пользователя"), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.IdUser == user_id).first()
+  # Новый эндпоинт для получения адреса по IdUser
+@router.get("/address/{id}", response_model=UserAddressResponse)
+def get_address_by_id(id: int, db: Session = Depends(get_db)):
+    address = db.query(UserAddress).filter(UserAddress.idUserAddress == id).first()
+    if not address:
+        raise HTTPException(status_code=404, detail="Address not found")
+    return UserAddressResponse(
+        idUserAddress=address.idUserAddress,
+        IdUser=address.IdUser,
+        AddrIndex=address.AddrIndex,
+        AddrCity=address.AddrCity,
+        AddrStreet=address.AddrStreet,
+        AddrHouse=address.AddrHouse,
+        AddrStructure=address.AddrStructure,
+        AddrApart=address.AddrApart
+    )
+
+@router.put("/address/{id}")
+def update_address_by_id(id: int, data: UserAddressBase, db: Session = Depends(get_db)):
+    address = db.query(UserAddress).filter(UserAddress.idUserAddress == id).first()
+    if not address:
+        raise HTTPException(status_code=404, detail="Address not found")
+    address.IdUser = data.IdUser
+    address.AddrIndex = data.AddrIndex
+    address.AddrCity = data.AddrCity
+    address.AddrStreet = data.AddrStreet
+    address.AddrHouse = data.AddrHouse
+    address.AddrStructure = data.AddrStructure
+    address.AddrApart = data.AddrApart
+    db.commit()
+    return {"status": "updated"}
+
+@router.put("/user/{id_user}", response_model=UserAuthResponse)
+async def update_user(id_user: int, user_data: UserUpdate, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.IdUser == id_user).first()
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    existing_email = db.query(User).filter(User.Email == user_data.Email, User.IdUser != id_user).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email уже зарегистрирован другим пользователем")
+
+    # Проверка уникальности userName (кроме текущего пользователя)
+    existing_username = db.query(User).filter(User.UserName == user_data.UserName, User.IdUser != id_user).first()
+    if existing_username:
+        raise HTTPException(status_code=400, detail="UserName уже занят другим пользователем")
+
+
+    # Обновление данных пользователя
+    user.FirstName = user_data.FirstName
+    user.LastName = user_data.LastName
+    user.SecondName = user_data.SecondName
+    user.Email = user_data.Email
+    user.UserName = user_data.UserName
+    user.Password = pwd_context.hash(user_data.Password)  # Хешируем пароль
+    if user_data.Avatar:
+        try:
+            user.Avatar = base64.b64decode(user_data.Avatar)  # Преобразуем base64 в bytes
+        except base64.binascii.Error:
+            raise HTTPException(status_code=422, detail="Некорректный формат изображения (base64)")
+  
+    db.commit()
+    db.refresh(user)
+
     return UserAuthResponse(
         IdUser=user.IdUser,
         FirstName=user.FirstName,
@@ -209,4 +269,25 @@ async def get_user_by_id(user_id: int = Path(..., description="ID пользов
         Enabled=user.Enabled,
         Avatar=user.Avatar,
         IsStaff=user.IsStaff
+    )
+
+@router.get("/user/{user_id}", response_model=UserAuthResponse)
+async def get_user_by_id(user_id: int = Path(..., description="ID пользователя"), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.IdUser == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    return UserAuthResponse(
+
+        IdUser=user.IdUser,
+        FirstName=user.FirstName,
+        LastName=user.LastName,
+        SecondName=user.SecondName,
+        Email=user.Email,
+        UserName=user.UserName,
+        Rating=user.Rating,
+        CreatedAt=user.CreatedAt,
+        Enabled=user.Enabled,
+        Avatar=user.Avatar,
+        IsStaff=user.IsStaff
     ) 
+
