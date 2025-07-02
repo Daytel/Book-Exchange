@@ -29,8 +29,8 @@
     <h1>Бланк обмена</h1>
     <div class="tabs">
       <button class="tab active">Хочу обменять</button>
-      <button class="tab" (click)="goToGet()>Хочу получить</button>
-      <button class="tab" (click)="goToAddress()>Адрес доставки</button>
+      <button class="tab" (click)="goToGet()">Хочу получить</button>
+      <button class="tab" (click)="goToAddress()">Адрес доставки</button>
     </div>
     <div class="form-columns">
       <form [formGroup]="exchangeForm" id="step-exchange" class="left-column">
@@ -38,9 +38,11 @@
           <div class="field-group">
             <label>Автор *</label>
             <input formControlName="authorLastName" type="text" placeholder="Фамилия">
+            <div *ngIf="exchangeForm.get('authorLastName')?.invalid && (exchangeForm.get('authorLastName')?.dirty || exchangeForm.get('authorLastName')?.touched)" class="error-message">Поле обязательно</div>
             <input formControlName="authorFirstName" type="text" placeholder="Имя">
             <label>Название книги *</label>
             <input formControlName="bookTitle" type="text" placeholder="Введите название">
+            <div *ngIf="exchangeForm.get('bookTitle')?.invalid && (exchangeForm.get('bookTitle')?.dirty || exchangeForm.get('bookTitle')?.touched)" class="error-message">Поле обязательно</div>
             <div class="isbn-year">
               <div>
                 <label>ISBN</label>
@@ -49,6 +51,7 @@
               <div>
                 <label>Год издания *</label>
                 <input formControlName="year" type="number" placeholder="2024">
+                <div *ngIf="exchangeForm.get('year')?.invalid && (exchangeForm.get('year')?.dirty || exchangeForm.get('year')?.touched)" class="error-message">Поле обязательно</div>
               </div>
             </div>
           </div>

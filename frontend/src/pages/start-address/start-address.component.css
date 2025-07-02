@@ -1,0 +1,158 @@
+/* --- Стили панели с кнопками (tabs) из start-exchange --- */
+.tabs {
+  display: flex;
+  justify-content: space-around;
+  background: white;
+  border-radius: 5px 5px 0 0;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.tab {
+  padding: 1rem 2rem;
+  background: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+.tab.active {
+  border-bottom: 3px solid black;
+}
+
+/* --- Стили верхней панели из главной страницы --- */
+.header {
+  display: flex;
+  font-size: 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 1px solid #ccc;
+}
+.logo img {
+  height: 50px;
+}
+.nav {
+  display: flex;
+  gap: 1.5rem;
+}
+.nav a {
+  text-decoration: none;
+  color: black;
+  font-weight: 500;
+  position: relative;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.nav a:hover {
+  transform: translateY(-4px);
+}
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.auth-link {
+  text-decoration: none;
+  font-weight: bold;
+  color: black;
+  font-size: 20px;
+  border: 1px solid black;
+  padding: 0.5rem 1rem;
+  transition: background 0.3s, color 0.3s;
+}
+.auth-link:hover {
+  background-color: black;
+  color: white;
+}
+.separator {
+  font-weight: bold;
+  margin: 0 0.2rem;
+  color: #555;
+}
+.disabled-link {
+  color: #aaa !important;
+  pointer-events: none;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* --- Импортировано из obmen.css, только уникальные стили для адреса --- */
+.form-container {
+  background-color: #fffbea;
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  gap: 40px;
+}
+.form-block {
+  flex: 1;
+}
+.form-block label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+.form-block input {
+  width: 100%;
+  padding: 6px;
+  margin-bottom: 12px;
+  border: 1px solid #000;
+}
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+.form-row input {
+  flex: 1;
+}
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px;
+}
+.back-btn,
+.submit-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+}
+.back-btn:hover,
+.submit-btn:hover {
+  background-color: #f0f0f0;
+}
+.message-box {
+  background: #fffbea;
+  padding: 20px;
+  border: 1px solid #999;
+  margin: 20px;
+  text-align: center;
+}
+.message-box button {
+  margin: 10px;
+  padding: 10px 20px;
+  background: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+}
+.message-box button:hover {
+  background: #f0f0f0;
+}
+.tab-buttons {
+  display: flex;
+  margin: 0 20px;
+}
+.tab-buttons div {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  background-color: #f7f7f7;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-weight: bold;
+}
+.tab-buttons .active {
+  background-color: #fff;
+  border-bottom: none;
+}

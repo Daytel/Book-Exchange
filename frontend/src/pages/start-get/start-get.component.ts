@@ -141,20 +141,24 @@ export class StartGetComponent implements OnInit {
       this.errorMsg = 'Пожалуйста, выберите хотя бы одну категорию.';
       return;
     }
-    // Сохраняем выбранные категории локально в сервисе
-    this.bookService.setWishListData({ categories: selectedCategories });
-    // Корректно сохраняем WishList через сервис
-    this.bookService.saveWishList({ categories: selectedCategories }).subscribe({
-      next: () => {
-        if (!this.isEditMode) {
+
+    const wishListData = {
+      categories: selectedCategories,
+      IdUser: this.authService.getUserId()
+    };
+    if (this.isEditMode) {
+      this.bookService.saveWishList(wishListData).subscribe({
+        next: () => {
           this.router.navigate(['start-exchange/address']);
+        },
+        error: () => {
+          this.errorMsg = 'Ошибка при сохранении WishList. Попробуйте ещё раз.';
         }
-        // В режиме редактирования просто сохраняем
-      },
-      error: () => {
-        this.errorMsg = 'Ошибка при сохранении WishList. Попробуйте ещё раз.';
-      }
-    });
+      });
+    } else {
+      this.bookService.setWishListData(wishListData);
+      this.router.navigate(['start-exchange/address']);
+    }
   }
 
   goToGive() {

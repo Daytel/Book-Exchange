@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList
-from ..schemas import CategoryResponse, ValueCategoryResponse
+from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList, UserAddress
+from ..schemas import CategoryResponse, ValueCategoryResponse, UserAddressResponse, UserAddressBase
 from typing import List, Dict, Any
 from datetime import datetime
 
@@ -78,10 +78,10 @@ def create_offer_list(data: dict = Body(...), db: Session = Depends(get_db)):
     # Создаём OfferList
     offer = OfferList(
         IdBookLiterary=book.IdBookLiterary,
-        IdUser=1,  # TODO: получить из сессии
+        IdUser=data.get('IdUser', 1),  # TODO: получить из сессии
         CreateAt=datetime.utcnow(),
         UpdateAt=datetime.utcnow(),
-        IdStatus=1  # TODO: статус по умолчанию
+        IdStatus=11  # TODO: статус по умолчанию
     )
     db.add(offer)
     db.commit()
@@ -94,7 +94,7 @@ def create_offer_list(data: dict = Body(...), db: Session = Depends(get_db)):
     # Сохраняем выбранные категории
     for cat in data['categories']:
         for val_id in cat['selected']:
-            db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdCategory=cat['IdCategory']))
+            db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdValueCategory=val_id))
     db.commit()
     return {"IdOfferList": offer.IdOfferList}
 
@@ -119,7 +119,7 @@ def update_offer_list(id: int, data: dict = Body(...), db: Session = Depends(get
         db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).delete()
         for cat in data['categories']:
             for val_id in cat['selected']:
-                db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdCategory=cat['IdCategory']))
+                db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdValueCategory=val_id))
         db.commit()
     return {"IdOfferList": id, "status": "updated"}
 
@@ -127,11 +127,11 @@ def update_offer_list(id: int, data: dict = Body(...), db: Session = Depends(get
 def create_wish_list(data: dict = Body(...), db: Session = Depends(get_db)):
     # TODO: получить IdUser и IdUserAddress из сессии/формы
     wish = WishList(
-        IdUser=1,
+        IdUser=data.get('IdUser', 1),
         CreatedAt=datetime.utcnow(),
         UpdateAt=datetime.utcnow(),
-        IdStatus=1,
-        IdUserAddress=1
+        IdStatus=11,
+        IdUserAddress=data.get('IdUserAddress', 1)
     )
     db.add(wish)
     db.commit()
@@ -144,7 +144,7 @@ def create_wish_list(data: dict = Body(...), db: Session = Depends(get_db)):
     # Сохраняем выбранные категории
     for cat in data['categories']:
         for val_id in cat['selected']:
-            db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdCategory=cat['IdCategory']))
+            db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdValueCategory=val_id))
     db.commit()
     return {"IdWishList": wish.IdWishList}
 
@@ -161,7 +161,7 @@ def update_wish_list(id: int, data: dict = Body(...), db: Session = Depends(get_
         db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).delete()
         for cat in data['categories']:
             for val_id in cat['selected']:
-                db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdCategory=cat['IdCategory']))
+                db.add(UserValueCategory(IdUserList=user_list.IdUserList, IdValueCategory=val_id))
         db.commit()
     return {"IdWishList": id, "status": "updated"}
 
@@ -185,4 +185,51 @@ def get_wish_list_by_id(id: int, db: Session = Depends(get_db)):
     return {
         "IdWishList": wish.IdWishList,
         "categories": selected_categories
-    } 
+    }
+
+@router.get("/address/{id}", response_model=UserAddressResponse)
+def get_address_by_id(id: int, db: Session = Depends(get_db)):
+    address = db.query(UserAddress).filter(UserAddress.idUserAddress == id).first()
+    if not address:
+        raise HTTPException(status_code=404, detail="Address not found")
+    return UserAddressResponse(
+        idUserAddress=address.idUserAddress,
+        IdUser=address.IdUser,
+        AddrIndex=address.AddrIndex,
+        AddrCity=address.AddrCity,
+        AddrStreet=address.AddrStreet,
+        AddrHouse=address.AddrHouse,
+        AddrStructure=address.AddrStructure,
+        AddrApart=address.AddrApart
+    )
+
+@router.put("/address/{id}")
+def update_address_by_id(id: int, data: UserAddressBase, db: Session = Depends(get_db)):
+    address = db.query(UserAddress).filter(UserAddress.idUserAddress == id).first()
+    if not address:
+        raise HTTPException(status_code=404, detail="Address not found")
+    address.IdUser = data.IdUser
+    address.AddrIndex = data.AddrIndex
+    address.AddrCity = data.AddrCity
+    address.AddrStreet = data.AddrStreet
+    address.AddrHouse = data.AddrHouse
+    address.AddrStructure = data.AddrStructure
+    address.AddrApart = data.AddrApart
+    db.commit()
+    return {"status": "updated"}
+
+@router.post("/address")
+def create_address(data: UserAddressBase, db: Session = Depends(get_db)):
+    address = UserAddress(
+        IdUser=data.IdUser,
+        AddrIndex=data.AddrIndex,
+        AddrCity=data.AddrCity,
+        AddrStreet=data.AddrStreet,
+        AddrHouse=data.AddrHouse,
+        AddrStructure=data.AddrStructure,
+        AddrApart=data.AddrApart
+    )
+    db.add(address)
+    db.commit()
+    db.refresh(address)
+    return {"idUserAddress": address.idUserAddress} 

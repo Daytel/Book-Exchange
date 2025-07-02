@@ -26,7 +26,7 @@ export class StartExchangeComponent implements OnInit {
   ) {
     this.exchangeForm = this.fb.group({
       authorLastName: ['', Validators.required],
-      authorFirstName: ['', Validators.required],
+      authorFirstName: [''],
       bookTitle: ['', Validators.required],
       isbn: [''],
       year: ['', Validators.required]
@@ -178,14 +178,22 @@ export class StartExchangeComponent implements OnInit {
     // Формируем структуру для OfferList (данные книги + выбранные категории)
     const offerListData = {
       book: this.exchangeForm.value,
-      categories: selectedCategories
+      categories: selectedCategories,
+      IdUser: this.authService.getUserId()
     };
-    this.bookService.setOfferListData(offerListData);
-    // Если не режим редактирования, переходим к start-get
-    if (!this.isEditMode) {
+    if (this.isEditMode) {
+      this.bookService.saveOfferList(offerListData).subscribe({
+        next: () => {
+          this.router.navigate(['/start-exchange/get']);
+        },
+        error: () => {
+          this.errorMsg = 'Ошибка при сохранении OfferList. Попробуйте ещё раз.';
+        }
+      });
+    } else {
+      this.bookService.setOfferListData(offerListData);
       this.router.navigate(['/start-exchange/get']);
     }
-    // В режиме редактирования можно добавить сохранение через saveOfferList
   }
 
   showAuthAlert(event: Event) {

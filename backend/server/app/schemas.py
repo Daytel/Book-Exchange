@@ -250,7 +250,7 @@ class UserListResponse(UserListBase):
 # --------------- UserValueCategory Schemas ---------------
 class UserValueCategoryBase(BaseModel):
     IdUserList: int
-    IdCategory: int
+    IdValueCategory: int
 
 class UserValueCategoryCreate(UserValueCategoryBase):
     pass

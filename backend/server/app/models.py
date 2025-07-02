@@ -187,10 +187,10 @@ class UserValueCategory(Base):
     __tablename__ = 'UserValueCategory'
     
     IdUserList = Column(Integer, ForeignKey('UserList.IdUserList'), primary_key=True)
-    IdCategory = Column(Integer, ForeignKey('Category.IdCategory'), primary_key=True)
+    IdValueCategory = Column(Integer, ForeignKey('ValueCategory.IdValueCategory'), primary_key=True)
     
     user_list = relationship("UserList")
-    category = relationship("Category")
+    value_category = relationship("ValueCategory")
 
 class Session(Base):
     __tablename__ = 'Session'
