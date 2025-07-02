@@ -1,0 +1,137 @@
+/* --- Стили из obmen.css, адаптированные для компонента --- */
+:host {
+    display: block;
+    background-color: #efedff;
+    color: #222;
+    font-size: 24px;
+  }
+  
+  .exchange-form {
+    padding: 2rem;
+    background: #e8e4ff;
+    min-height: 100vh;
+  }
+  .tabs {
+    display: flex;
+    justify-content: space-around;
+    background: white;
+    border-radius: 5px 5px 0 0;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .tab {
+    padding: 1rem 2rem;
+    background: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .tab.active {
+    border-bottom: 3px solid black;
+  }
+  .form-fields {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .field-group {
+    background: #fffbe9;
+    padding: 1rem;
+    flex: 1;
+  }
+  .field-group input {
+    display: block;
+    margin: 0.5rem 0 1rem;
+    padding: 0.5rem;
+    width: 100%;
+  }
+  .isbn-year {
+    display: flex;
+    gap: 1rem;
+  }
+  .next-btn {
+    margin-top: 1rem;
+    float: right;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid black;
+    cursor: pointer;
+  }
+  .filter-menu {
+    background: #fffbe9;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  .filter-menu h2 {
+    margin-bottom: 0.5rem;
+  }
+  .filter-group {
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #ddd;
+  }
+  .filter-toggle {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: white;
+    border: none;
+    font-size: 1rem;
+    text-align: left;
+    position: relative;
+    cursor: pointer;
+  }
+  .filter-toggle::after {
+    content: '+';
+    position: absolute;
+    right: 1rem;
+  }
+  .filter-group.open .filter-toggle::after {
+    content: '–';
+  }
+  .filter-options {
+    display: none;
+    padding: 0.5rem 1rem;
+  }
+  .filter-group.open .filter-options {
+    display: block;
+  }
+  .filter-options label {
+    display: block;
+    margin-bottom: 0.3rem;
+    cursor: pointer;
+  }
+  .filter-options input {
+    margin-right: 0.4rem;
+  }
+  #clear-all {
+    margin-top: 0.5rem;
+    background: #eee;
+    border: 1px solid #ccc;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .form-columns {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  .left-column {
+    flex: 2 1 60%;
+    min-width: 350px;
+  }
+  .right-column {
+    flex: 1 1 30%;
+    min-width: 250px;
+    background: #fffbe9;
+    border-radius: 10px;
+    padding: 1.5rem 1rem;
+    margin-top: 0;
+  }
+  @media (max-width: 900px) {
+    .form-columns {
+      flex-direction: column;
+    }
+    .right-column {
+      margin-top: 2rem;
+    }
+  } 

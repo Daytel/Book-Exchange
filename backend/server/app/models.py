@@ -157,13 +157,9 @@ class UserExchangeList(Base):
 
 class Category(Base):
     __tablename__ = 'Category'
-    
     IdCategory = Column(Integer, primary_key=True, autoincrement=True)
-    Name = Column(String(25), nullable=False)
-    IdParent = Column(Integer, ForeignKey('Category.IdCategory'), default=0)
+    Value = Column(String(25), nullable=False)
     MultySelect = Column(Boolean, default=False)
-    
-    parent = relationship("Category", remote_side=[IdCategory])
 
 class BookResponse(Base):
     __tablename__ = 'BookResponse'
@@ -207,3 +203,10 @@ class Session(Base):
     
     # Связь с пользователем
     user = relationship("User")
+
+class ValueCategory(Base):
+    __tablename__ = 'ValueCategory'
+    IdValueCategory = Column(Integer, primary_key=True, autoincrement=True)
+    Value = Column(String(25), nullable=False)
+    IdCategory = Column(Integer, ForeignKey('Category.IdCategory'), nullable=False)
+    category = relationship("Category")
