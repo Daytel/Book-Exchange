@@ -58,9 +58,25 @@ async def create_message(msg: UserMsgCreate, db: Session = Depends(get_db)):
 @router.get("/messages/received", response_model=list[UserMsgResponse])
 async def get_received_messages(user_id: int, db: Session = Depends(get_db)):
     messages = db.query(UserMsg).filter(UserMsg.IdUser == user_id).order_by(UserMsg.CreateAt.desc()).all()
-    return messages
+    result = []
+    for msg in messages:
+        status_name = msg.status.Name if msg.status else ""
+        result.append({
+            **msg.__dict__,
+            "StatusName": status_name
+        })
+    return result
 
 @router.get("/statuses/", response_model=list[StatusResponse])
 async def get_statuses(db: Session = Depends(get_db)):
     statuses = db.query(Status).all()
-    return statuses 
+    return statuses
+
+@router.delete("/messages/{msg_id}", status_code=204)
+async def delete_message(msg_id: int, db: Session = Depends(get_db)):
+    msg = db.query(UserMsg).filter(UserMsg.IdUserMsg == msg_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    db.delete(msg)
+    db.commit()
+    return 

@@ -9,7 +9,8 @@ export interface UserMsg {
   Text: string;
   Notes?: string;
   IdStatus: number;
-  Type: boolean;
+  Type: number;
+  StatusName: string;
 }
 
 export interface Status {
@@ -39,5 +40,10 @@ export class MessageService {
   // Получить список статусов
   getStatuses() {
     return this.http.get<Status[]>(`${this.apiUrl.replace('/messages', '')}/statuses/`, { withCredentials: true });
+  }
+
+  // Удалить сообщение по Id
+  deleteMessage(msgId: number) {
+    return this.http.delete(`${this.apiUrl}/${msgId}`, { withCredentials: true });
   }
 }

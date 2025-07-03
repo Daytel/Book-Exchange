@@ -188,6 +188,7 @@ class UserMsgCreate(UserMsgBase):
 
 class UserMsgResponse(UserMsgBase):
     IdUserMsg: int
+    StatusName: str
     model_config = ConfigDict(from_attributes=True)
 
 # --------------- ExchangeList Schemas ---------------

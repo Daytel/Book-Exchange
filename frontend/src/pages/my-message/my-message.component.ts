@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { MessageService, UserMsg, Status } from '../../services/message.service';
+import { AuthService } from 'src/services/auth.service';
+import { MessageService, UserMsg } from 'src/services/message.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-my-message',
@@ -7,69 +9,74 @@ import { MessageService, UserMsg, Status } from '../../services/message.service'
   styleUrls: ['./my-message.component.css']
 })
 export class MyMessageComponent implements OnInit {
+  user: any = {};
   messages: UserMsg[] = [];
-  loading = false;
-  error = '';
-  statuses: Status[] = [];
-  emailPrefs: { [statusId: number]: boolean } = {};
+  expandedMsgs: { [id: number]: boolean } = {};
+  isLoggedIn = false;
+  userName: string | null = null;
+  avatar: string | null = null;
 
-  constructor(private messageService: MessageService) {}
+  constructor(private authService: AuthService, private messageService: MessageService, private router: Router) {}
 
   ngOnInit() {
-    this.fetchStatuses();
-    this.fetchMessages();
-  }
-
-  fetchMessages() {
-    this.loading = true;
-    // Здесь userId должен быть получен из авторизации или профиля пользователя
-    const userId = 1; // TODO: заменить на актуальный id пользователя
-    this.messageService.getReceivedMessages(userId)
-      .subscribe({
-        next: (msgs) => {
-          this.messages = msgs;
-          this.loading = false;
+    const userId = this.authService.getUserId();
+    if (userId) {
+      this.isLoggedIn = true;
+      this.authService.getUserById(userId).subscribe({
+        next: (user: any) => {
+          this.user = user;
+          this.userName = user.UserName || user.userName || user.Email;
+          if (user.Avatar) {
+            this.avatar = 'data:image/jpeg;base64,' + user.Avatar;
+          }
+          if (user && user.IdUser) {
+            this.messageService.getReceivedMessages(user.IdUser).subscribe(
+              (msgs: UserMsg[]) => this.messages = msgs,
+              () => this.messages = []
+            );
+          } else {
+            this.messages = [];
+          }
         },
-        error: (err) => {
-          this.error = 'Ошибка загрузки сообщений';
-          this.loading = false;
+        error: () => {
+          this.isLoggedIn = false;
         }
       });
-  }
-
-  fetchStatuses() {
-    this.messageService.getStatuses().subscribe({
-      next: (statuses) => {
-        this.statuses = statuses;
-        // Инициализация emailPrefs (по умолчанию все false)
-        for (const s of statuses) {
-          if (!(s.IdStatus in this.emailPrefs)) {
-            this.emailPrefs[s.IdStatus] = false;
-          }
-        }
-      },
-      error: () => {
-        this.statuses = [];
-      }
+    }
+    this.authService.refreshSession().subscribe({
+      next: () => {},
+      error: () => {}
     });
   }
 
-  // Пример отправки сообщения:
-  // sendMessage() {
-  //   const msg: UserMsg = {
-  //     IdUserMsg: 0,
-  //     IdUser: 1, // id получателя
-  //     Text: 'Текст сообщения',
-  //     Notes: 'Примечание',
-  //     IdStatus: 2, // id статуса
-  //     Type: true,
-  //     CreateAt: new Date().toISOString()
-  //   };
-  //   // Теперь письмо всегда отправляется вместе с записью в БД
-  //   this.messageService.sendMessage(msg)
-  //     .subscribe({
-  //       next: (res) => alert('Сообщение отправлено и email отправлен!'),
-  //       error: (err) => alert('Ошибка отправки')
-  //     });
-  // }
+  toggleMessage(msg: UserMsg, event: MouseEvent) {
+    if ((event.target as HTMLElement).tagName === 'BUTTON') return;
+    this.expandedMsgs[msg.IdUserMsg] = !this.expandedMsgs[msg.IdUserMsg];
+  }
+
+  deleteMessage(msg: UserMsg, event: MouseEvent) {
+    event.stopPropagation();
+    if (confirm('Вы уверены, что хотите удалить это сообщение?')) {
+      this.messageService.deleteMessage(msg.IdUserMsg).subscribe({
+        next: () => {
+          this.messages = this.messages.filter(m => m.IdUserMsg !== msg.IdUserMsg);
+          delete this.expandedMsgs[msg.IdUserMsg];
+        },
+        error: () => {
+          alert('Ошибка при удалении сообщения на сервере.');
+        }
+      });
+    }
+  }
+
+  goToProfile() {
+    this.router.navigate(['/my-exchange/personal']);
+  }
+
+  logout() {
+    this.authService.logout().subscribe(() => {
+      this.authService.clearUserData && this.authService.clearUserData();
+      window.location.reload();
+    });
+  }
 }
