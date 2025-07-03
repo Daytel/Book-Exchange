@@ -241,4 +241,29 @@ export class BookService {
   getBooksByAuthor(authorId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/authors/${authorId}/books`);
   }
+
+  /** Получить все OfferList пользователя */
+  getOfferListByUser(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/offer-list/user/${userId}`);
+  }
+
+  /** Удалить OfferList по id */
+  deleteOfferListById(offerListId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/offer-list/${offerListId}`);
+  }
+
+  /** Получить все WishList пользователя */
+  getWishListByUser(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/wish-list/user/${userId}`);
+  }
+
+  /** Удалить WishList по id */
+  deleteWishListById(wishListId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/wish-list/${wishListId}`);
+  }
+
+  /** Получить завершённые обмены пользователя */
+  getArchiveExchanges(userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/archive-exchanges?IdUser=${userId}`);
+  }
 } 

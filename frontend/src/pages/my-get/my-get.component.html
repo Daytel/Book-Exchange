@@ -1,1 +1,89 @@
-<p>my-get works!</p>
+<header class="header">
+  <div class="logo">
+    <img src="assets/logo.png" alt="Логотип">
+  </div>
+  <nav class="nav">
+    <a routerLink="/">Главная</a>
+    <a routerLink="/start-exchange/give">Начать обмен</a>
+    <a *ngIf="isLoggedIn; else noAccess" routerLink="/my-exchange/offers">Мои обмены</a>
+    <ng-template #noAccess>
+      <a href="#" class="disabled-link" (click)="showAuthAlert($event)">Мои обмены</a>
+    </ng-template>
+    <a routerLink="/feedback">Задать вопрос</a>
+  </nav>
+  <div class="auth" *ngIf="!isLoggedIn">
+    <a routerLink="/auth/login" class="auth-link">Авторизоваться</a>
+    <span class="separator">|</span>
+    <a routerLink="/auth/register" class="auth-link">Регистрация</a>
+  </div>
+  <div class="auth" *ngIf="isLoggedIn">
+    <div class="user-info" (click)="goToProfile()" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+      <img [src]="avatar || 'assets/default-avatar.jpg'" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <span>{{ userName }}</span>
+    </div>
+    <button class="auth-link" style="margin-left:1rem;" (click)="logout()">Выйти</button>
+  </div>
+</header>
+
+<div class="main-container">
+  <div class="user-profile">
+    <div class="user-info">
+      <div class="avatar">
+        <img [src]="user.avatar || 'assets/default-avatar.jpg'" alt="Аватар">
+      </div>
+      <a routerLink="/my-exchange/personal" class="username">{{user.name}}</a>
+      <div class="rating">рейтинг {{user.rating}}</div>
+    </div>
+    <ul class="menu">
+      <li><a routerLink="/my-exchange/offers">Предложения для обмена</a></li>
+      <li><a routerLink="/my-exchange/give">Хочу обменять</a></li>
+      <li><a routerLink="/my-exchange/get" class="active">Хочу получить</a></li>
+      <li><a routerLink="/my-exchange/active">Активные обмены</a></li>
+      <li><a routerLink="/my-exchange/rewiews">Отзывы на книги</a></li>
+      <li><a routerLink="/my-exchange/personal">Личные данные</a></li>
+      <li><a routerLink="/my-exchange/messages">Сообщения</a></li>
+      <li><a routerLink="/my-exchange/archive">Архив</a></li>
+    </ul>
+  </div>
+
+  <div class="content">
+    <h1 class="section-title">Хочу получить</h1>
+    <div class="search-status">
+      Найдено {{wishes.length}} вариантов для обмена. Поиск выполнен: {{searchTime | date:'dd.MM.yyyy HH:mm'}}
+    </div>
+    <div class="offers-list">
+      <div *ngFor="let wish of wishes; let i = index" class="offer-item" [class.expanded]="expandedIndex === i" (click)="toggleDetails($event, i)">
+        <button *ngIf="wish.IdStatus === 11" class="delete-btn" (click)="deleteWish($event, i)">×</button>
+        <div class="offer-main">
+          <div class="offer-user-info">
+            <div class="book-property" *ngFor="let cat of wish.categories">
+              <span class="property-name">{{cat.categoryName}}:</span> {{cat.valueName}}
+            </div>
+            <div class="book-property"><span class="property-name">Состояние:</span> {{wish.condition}}</div>
+            <div class="book-property"><span class="property-name">Область наук:</span> {{wish.science}}</div>
+            <div class="book-property"><span class="property-name">Обложка:</span> {{wish.cover}}</div>
+            <div class="book-property"><span class="property-name">Лауреат:</span> {{wish.laureate}}</div>
+            <div class="book-property"><span class="property-name">Экранизация:</span> {{wish.screened}}</div>
+            <div class="book-property"><span class="property-name">Язык издания:</span> {{wish.language}}</div>
+          </div>
+        </div>
+        <div class="offer-details">
+          <div class="details-content">
+            <div class="details-left">
+              <div class="details-title">Детали запроса:</div>
+              <div class="book-property" *ngFor="let cat of wish.categories">
+                <span class="property-name">{{cat.categoryName}}:</span> {{cat.valueName}}
+              </div>
+              <div class="book-property"><span class="property-name">Состояние:</span> {{wish.condition}}</div>
+              <div class="book-property"><span class="property-name">Область наук:</span> {{wish.science}}</div>
+              <div class="book-property"><span class="property-name">Обложка:</span> {{wish.cover}}</div>
+              <div class="book-property"><span class="property-name">Лауреат:</span> {{wish.laureate}}</div>
+              <div class="book-property"><span class="property-name">Экранизация:</span> {{wish.screened}}</div>
+              <div class="book-property"><span class="property-name">Язык издания:</span> {{wish.language}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

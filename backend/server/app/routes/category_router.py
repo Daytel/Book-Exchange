@@ -740,4 +740,174 @@ def get_books_by_author(author_id: int, db: Session = Depends(get_db)):
     return [
         {"id": b.IdBookLiterary, "title": b.BookName}
         for b in books
-    ] 
+    ]
+
+@router.delete("/offer-list/{offerlist_id}")
+def delete_offerlist(offerlist_id: int, db: Session = Depends(get_db)):
+    offer = db.query(OfferList).filter(OfferList.IdOfferList == offerlist_id).first()
+    if not offer:
+        raise HTTPException(status_code=404, detail="OfferList not found")
+    if offer.IdStatus != 11:
+        raise HTTPException(status_code=400, detail="Удаление возможно только если статус = 11 (поиск)")
+    # Удаляем UserList и связанные UserValueCategory
+    user_list = db.query(UserList).filter(UserList.IdOfferList == offerlist_id).first()
+    if user_list:
+        db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).delete()
+        db.delete(user_list)
+    # Удаляем книгу
+    book = db.query(BookLiterary).filter(BookLiterary.IdBookLiterary == offer.IdBookLiterary).first()
+    if book:
+        db.delete(book)
+    # Удаляем сам OfferList
+    db.delete(offer)
+    db.commit()
+    return {"result": "deleted"}
+
+@router.get("/offer-list/user/{user_id}")
+def get_offer_lists_by_user(user_id: int, db: Session = Depends(get_db)):
+    offers = db.query(OfferList).filter(OfferList.IdUser == user_id, OfferList.IdStatus != 15).all()
+    result = []
+    for offer in offers:
+        book = db.query(BookLiterary).filter(BookLiterary.IdBookLiterary == offer.IdBookLiterary).first()
+        autor = db.query(Autor).filter(Autor.IdAutor == book.IdAutor).first() if book else None
+        result.append({
+            "offerId": offer.IdOfferList,
+            "book": {
+                "authorLastName": autor.LastName if autor else None,
+                "authorFirstName": autor.FirstName if autor else None,
+                "bookTitle": book.BookName if book else None,
+                "genre": getattr(book, 'Genre', None),
+                "year": book.YearPublishing.year if book and book.YearPublishing else None
+            },
+            "condition": getattr(offer, 'Condition', None),
+            "science": getattr(offer, 'Science', None),
+            "cover": getattr(offer, 'Cover', None),
+            "laureate": getattr(offer, 'Laureate', None),
+            "screened": getattr(offer, 'Screened', None),
+            "language": getattr(offer, 'Language', None),
+            "IdStatus": offer.IdStatus
+        })
+    return result
+
+@router.delete("/wish-list/{wishlist_id}")
+def delete_wishlist(wishlist_id: int, db: Session = Depends(get_db)):
+    wish = db.query(WishList).filter(WishList.IdWishList == wishlist_id).first()
+    if not wish:
+        raise HTTPException(status_code=404, detail="WishList not found")
+    if wish.IdStatus != 11:
+        raise HTTPException(status_code=400, detail="Удаление возможно только если статус = 11 (поиск)")
+    # Проверяем, что WishList не участвует в ExchangeList
+    exchange_exists = db.query(ExchangeList).filter(
+        (ExchangeList.IdWishList1 == wishlist_id) | (ExchangeList.IdWishList2 == wishlist_id)
+    ).first()
+    if exchange_exists:
+        raise HTTPException(status_code=400, detail="Нельзя удалить запрос, участвовавший в обмене")
+    # Удаляем UserList и связанные UserValueCategory
+    user_list = db.query(UserList).filter(UserList.IdWishList == wishlist_id).first()
+    if user_list:
+        db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).delete()
+        db.delete(user_list)
+    # Удаляем сам WishList
+    db.delete(wish)
+    db.commit()
+    return {"result": "deleted"}
+
+@router.get("/wish-list/user/{user_id}")
+def get_wish_lists_by_user(user_id: int, db: Session = Depends(get_db)):
+    wishlists = db.query(WishList).filter(WishList.IdUser == user_id, WishList.IdStatus != 15).all()
+    result = []
+    for wish in wishlists:
+        user_list = db.query(UserList).filter(UserList.IdWishList == wish.IdWishList).first()
+        categories = []
+        if user_list:
+            uvc_list = db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).all()
+            for uvc in uvc_list:
+                value_cat = db.query(ValueCategory).filter(ValueCategory.IdValueCategory == uvc.IdValueCategory).first()
+                cat = db.query(Category).filter(Category.IdCategory == value_cat.IdCategory).first() if value_cat else None
+                categories.append({
+                    "IdCategory": value_cat.IdCategory if value_cat else None,
+                    "categoryName": cat.Value if cat else None,
+                    "IdValueCategory": value_cat.IdValueCategory if value_cat else None,
+                    "valueName": value_cat.Value if value_cat else None
+                })
+        result.append({
+            "wishId": wish.IdWishList,
+            "categories": categories,
+            "condition": getattr(wish, 'Condition', None),
+            "science": getattr(wish, 'Science', None),
+            "cover": getattr(wish, 'Cover', None),
+            "laureate": getattr(wish, 'Laureate', None),
+            "screened": getattr(wish, 'Screened', None),
+            "language": getattr(wish, 'Language', None),
+            "IdStatus": wish.IdStatus
+        })
+    return result
+
+@router.get("/archive-exchanges")
+def get_archive_exchanges(IdUser: int = Query(...), db: Session = Depends(get_db)):
+    user_offer_ids = [o.IdOfferList for o in db.query(OfferList).filter(OfferList.IdUser == IdUser).all()]
+    exchanges = db.query(ExchangeList).filter(
+        (ExchangeList.IdOfferList1.in_(user_offer_ids)) | (ExchangeList.IdOfferList2.in_(user_offer_ids))
+    ).all()
+    def get_categories_for_offer(offer_id):
+        user_list = db.query(UserList).filter(UserList.IdOfferList == offer_id).first()
+        categories = []
+        if user_list:
+            uvc_list = db.query(UserValueCategory).filter(UserValueCategory.IdUserList == user_list.IdUserList).all()
+            for uvc in uvc_list:
+                value_cat = db.query(ValueCategory).filter(ValueCategory.IdValueCategory == uvc.IdValueCategory).first()
+                cat = db.query(Category).filter(Category.IdCategory == value_cat.IdCategory).first() if value_cat else None
+                categories.append({
+                    "IdCategory": value_cat.IdCategory if value_cat else None,
+                    "categoryName": cat.Value if cat else None,
+                    "IdValueCategory": value_cat.IdValueCategory if value_cat else None,
+                    "valueName": value_cat.Value if value_cat else None
+                })
+        return categories
+    result = []
+    for exch in exchanges:
+        # Определяем, с какой стороны пользователь
+        if exch.IdOfferList1 in user_offer_ids:
+            my_offer_id = exch.IdOfferList1
+            their_offer_id = exch.IdOfferList2
+            my_wishlist_id = exch.IdWishList1
+            their_wishlist_id = exch.IdWishList2
+        else:
+            my_offer_id = exch.IdOfferList2
+            their_offer_id = exch.IdOfferList1
+            my_wishlist_id = exch.IdWishList2
+            their_wishlist_id = exch.IdWishList1
+        my_offer = db.query(OfferList).filter(OfferList.IdOfferList == my_offer_id).first()
+        their_offer = db.query(OfferList).filter(OfferList.IdOfferList == their_offer_id).first()
+        # Только завершённые обмены (оба offerlist = 15)
+        if not (my_offer and their_offer and my_offer.IdStatus == 15 and their_offer.IdStatus == 15):
+            continue
+        my_user = db.query(User).filter(User.IdUser == my_offer.IdUser).first() if my_offer else None
+        their_user = db.query(User).filter(User.IdUser == their_offer.IdUser).first() if their_offer else None
+        my_book = db.query(BookLiterary).filter(BookLiterary.IdBookLiterary == my_offer.IdBookLiterary).first() if my_offer else None
+        their_book = db.query(BookLiterary).filter(BookLiterary.IdBookLiterary == their_offer.IdBookLiterary).first() if their_offer else None
+        my_categories = get_categories_for_offer(my_offer_id)
+        their_categories = get_categories_for_offer(their_offer_id)
+        result.append({
+            "id": exch.IdExchangeList,
+            "date": exch.CreateAt.strftime('%d.%m.%Y') if exch.CreateAt else None,
+            "myBook": {
+                "author": my_book.autor.LastName if my_book and my_book.autor else None,
+                "title": my_book.BookName if my_book else None,
+                "categories": my_categories,
+                "year": my_book.YearPublishing.year if my_book and my_book.YearPublishing else None
+            },
+            "theirBook": {
+                "author": their_book.autor.LastName if their_book and their_book.autor else None,
+                "title": their_book.BookName if their_book else None,
+                "categories": their_categories,
+                "year": their_book.YearPublishing.year if their_book and their_book.YearPublishing else None
+            },
+            "userName": their_user.UserName if their_user else None,
+            "userRating": getattr(their_user, 'Rating', 0) if their_user else 0,
+            "avatar": their_user.Avatar if their_user else None,
+            "status": "Завершен",
+            "myUserId": IdUser,
+            "theirUserId": their_user.IdUser if their_user else None
+        })
+    return {"exchanges": result} 
