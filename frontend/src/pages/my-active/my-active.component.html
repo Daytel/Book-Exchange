@@ -18,7 +18,7 @@
   </div>
   <div class="auth" *ngIf="isLoggedIn">
     <div class="user-info" (click)="goToProfile()" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
-      <img *ngIf="avatar" [src]="avatar" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <img [src]="avatar || 'assets/default-avatar.jpg'" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
       <span>{{ userName }}</span>
     </div>
     <button class="auth-link" style="margin-left:1rem;" (click)="logout()">Выйти</button>
@@ -39,9 +39,9 @@
       <li><a routerLink="/my-exchange/give">Хочу обменять</a></li>
       <li><a routerLink="/my-exchange/get">Хочу получить</a></li>
       <li><a routerLink="/my-exchange/active" class="active">Активные обмены</a></li>
-      <li><a routerLink="/my-exchange/review">Отзывы на книги</a></li>
+      <li><a routerLink="/my-exchange/rewiews">Отзывы на книги</a></li>
       <li><a routerLink="/my-exchange/personal">Личные данные</a></li>
-      <li><a routerLink="/my-exchange/message">Сообщения</a></li>
+      <li><a routerLink="/my-exchange/messages">Сообщения</a></li>
       <li><a routerLink="/my-exchange/archive">Архив</a></li>
     </ul>
   </div>

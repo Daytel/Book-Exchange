@@ -233,4 +233,12 @@ export class BookService {
       }
     });
   }
+
+  getAuthors(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/authors`);
+  }
+
+  getBooksByAuthor(authorId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/authors/${authorId}/books`);
+  }
 } 

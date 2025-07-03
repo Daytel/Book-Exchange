@@ -619,4 +619,20 @@ def propose_exchange(
     db.add(exch)
     db.commit()
     db.refresh(exch)
-    return {"status": "proposed", "exchangeId": exch.IdExchangeList} 
+    return {"status": "proposed", "exchangeId": exch.IdExchangeList}
+
+@router.get("/authors")
+def get_authors(db: Session = Depends(get_db)):
+    authors = db.query(Autor).all()
+    return [
+        {"id": a.IdAutor, "firstName": a.FirstName, "lastName": a.LastName}
+        for a in authors
+    ]
+
+@router.get("/authors/{author_id}/books")
+def get_books_by_author(author_id: int, db: Session = Depends(get_db)):
+    books = db.query(BookLiterary).filter(BookLiterary.IdAutor == author_id).all()
+    return [
+        {"id": b.IdBookLiterary, "title": b.BookName}
+        for b in books
+    ] 
