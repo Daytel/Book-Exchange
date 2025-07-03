@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
 from sqlalchemy.orm import Session, joinedload
 from ..database import get_db, get_current_user
-from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList, UserAddress, User, ExchangeList, UserExchangeList, Status
+from ..models import Category, ValueCategory, OfferList, BookLiterary, Autor, UserList, UserValueCategory, WishList, UserAddress, User, ExchangeList, UserExchangeList, Status, UserMsg
 from ..schemas import CategoryResponse, ValueCategoryResponse, UserAddressResponse, UserAddressBase
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
@@ -542,6 +542,53 @@ def confirm_exchange(exchange_id: int, current_user: User = Depends(get_current_
         if offer and not db.query(UserExchangeList).filter(UserExchangeList.IdOfferList == offer.IdOfferList).first():
             db.add(UserExchangeList(IdOfferList=offer.IdOfferList, TrackNumber=None, Receiving=False))
     db.commit()
+
+    # --- Сообщения для обоих участников ---
+    # Для offer1 (ждёт user2 по адресу wish2.address)
+    if offer1 and offer2 and wish2:
+        book1 = offer1.book
+        author1 = book1.autor.LastName if book1 and book1.autor else ''
+        title1 = book1.BookName if book1 else ''
+        user2 = offer2.user
+        fio2 = f"{user2.LastName} {user2.FirstName} {user2.SecondName or ''}".strip() if user2 else ''
+        addr2 = wish2.address
+        addr2_str = f"{addr2.AddrCity}, {addr2.AddrStreet}, {addr2.AddrHouse}"
+        if addr2.AddrStructure:
+            addr2_str += f", стр. {addr2.AddrStructure}"
+        if addr2.AddrApart:
+            addr2_str += f", кв. {addr2.AddrApart}"
+        msg1 = UserMsg(
+            IdUser=offer1.IdUser,
+            CreateAt=datetime.utcnow(),
+            Text=f"Вашу книгу {author1}, {title1} ждёт {fio2} по адресу {addr2_str}",
+            Notes=None,
+            IdStatus=12,
+            Type=True
+        )
+        db.add(msg1)
+    # Для offer2 (ждёт user1 по адресу wish1.address)
+    if offer1 and offer2 and wish1:
+        book2 = offer2.book
+        author2 = book2.autor.LastName if book2 and book2.autor else ''
+        title2 = book2.BookName if book2 else ''
+        user1 = offer1.user
+        fio1 = f"{user1.LastName} {user1.FirstName} {user1.SecondName or ''}".strip() if user1 else ''
+        addr1 = wish1.address
+        addr1_str = f"{addr1.AddrCity}, {addr1.AddrStreet}, {addr1.AddrHouse}"
+        if addr1.AddrStructure:
+            addr1_str += f", стр. {addr1.AddrStructure}"
+        if addr1.AddrApart:
+            addr1_str += f", кв. {addr1.AddrApart}"
+        msg2 = UserMsg(
+            IdUser=offer2.IdUser,
+            CreateAt=datetime.utcnow(),
+            Text=f"Вашу книгу {author2}, {title2} ждёт {fio1} по адресу {addr1_str}",
+            Notes=None,
+            IdStatus=12,
+            Type=True
+        )
+        db.add(msg2)
+    db.commit()
     return {"status": "confirmed", "exchangeId": exchange_id, "IsBoth": True}
 
 @router.delete("/active-exchanges/{exchange_id}/cancel")
@@ -549,6 +596,45 @@ def cancel_exchange(exchange_id: int, db: Session = Depends(get_db)):
     exch = db.query(ExchangeList).filter(ExchangeList.IdExchangeList == exchange_id).first()
     if not exch:
         raise HTTPException(status_code=404, detail="Exchange not found")
+    # Получаем оба OfferList
+    offer1 = db.query(OfferList).filter(OfferList.IdOfferList == exch.IdOfferList1).first()
+    offer2 = db.query(OfferList).filter(OfferList.IdOfferList == exch.IdOfferList2).first()
+    # Меняем статус OfferList1 с 12 на 11, если нужно
+    if offer1 and offer1.IdStatus == 12:
+        offer1.IdStatus = 11
+        db.commit()
+    # Получаем данные книги и авторов
+    book1 = offer1.book if offer1 else None
+    book2 = offer2.book if offer2 else None
+    author1 = book1.autor.LastName if book1 and book1.autor else ''
+    title1 = book1.BookName if book1 else ''
+    author2 = book2.autor.LastName if book2 and book2.autor else ''
+    title2 = book2.BookName if book2 else ''
+    # Сообщение первому участнику (offer1.IdUser)
+    if offer1:
+        text1 = f"Второй участник не подтвердил обмен на вашу книгу {author1}, {title1}. Мы найдем Вам другой вариант."
+        user_msg1 = UserMsg(
+            IdUser=offer1.IdUser,
+            CreateAt=datetime.utcnow(),
+            Text=text1,
+            Notes=None,
+            IdStatus=15,
+            Type=True
+        )
+        db.add(user_msg1)
+    # Сообщение второму участнику (offer2.IdUser)
+    if offer2:
+        text2 = f"Вариант обмена на книгу {author1}, {title1} аннулирован."
+        user_msg2 = UserMsg(
+            IdUser=offer2.IdUser,
+            CreateAt=datetime.utcnow(),
+            Text=text2,
+            Notes=None,
+            IdStatus=15,
+            Type=False
+        )
+        db.add(user_msg2)
+    db.commit()
     db.delete(exch)
     db.commit()
     return {"status": "cancelled", "exchangeId": exchange_id}
@@ -619,6 +705,25 @@ def propose_exchange(
     db.add(exch)
     db.commit()
     db.refresh(exch)
+
+    # --- Добавление сообщения второму пользователю ---
+    their_offer = db.query(OfferList).filter(OfferList.IdOfferList == their_offerlist_id).first()
+    if their_offer:
+        book = their_offer.book
+        author = book.autor.LastName if book and book.autor else ''
+        title = book.BookName if book else ''
+        text = f"На Вашу книгу {author}, {title} согласны обменяться."
+        user_msg = UserMsg(
+            IdUser=their_offer.IdUser,
+            CreateAt=datetime.utcnow(),
+            Text=text,
+            Notes=None,
+            IdStatus=11,
+            Type=True
+        )
+        db.add(user_msg)
+        db.commit()
+
     return {"status": "proposed", "exchangeId": exch.IdExchangeList}
 
 @router.get("/authors")
