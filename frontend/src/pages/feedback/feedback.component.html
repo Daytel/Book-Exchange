@@ -1,1 +1,38 @@
-<p>feedback works!</p>
+<header class="header">
+  <div class="logo">
+    <img src="assets/logo.png" alt="Логотип">
+  </div>
+  <nav class="nav">
+    <a routerLink="/">Главная</a>
+    <a routerLink="/start-exchange/give">Начать обмен</a>
+    <a *ngIf="isLoggedIn; else noAccess" routerLink="/my-exchange/offers">Мои обмены</a>
+    <ng-template #noAccess>
+      <a href="#" class="disabled-link" (click)="showAuthAlert($event)">Мои обмены</a>
+    </ng-template>
+    <a routerLink="/feedback">Задать вопрос</a>
+  </nav>
+  <div class="auth" *ngIf="!isLoggedIn">
+    <a routerLink="/auth/login" class="auth-link">Авторизоваться</a>
+    <span class="separator">|</span>
+    <a routerLink="/auth/register" class="auth-link">Регистрация</a>
+  </div>
+  <div class="auth" *ngIf="isLoggedIn">
+    <div class="user-info" (click)="goToProfile()" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+      <img [src]="avatar || 'assets/default-avatar.jpg'" alt="Аватар" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <span>{{ userName }}</span>
+    </div>
+    <button class="auth-link" style="margin-left:1rem;" (click)="logout()">Выйти</button>
+  </div>
+</header>
+
+<main>
+  <h1>Форма для связи с администратором</h1>
+  <form class="question-form" (ngSubmit)="onSubmit()" #questionForm="ngForm">
+    <label for="question">Ваш вопрос *</label>
+    <textarea id="question" name="question" rows="6" required placeholder="Введите ваш вопрос..." [(ngModel)]="question"></textarea>
+    <button type="submit" [disabled]="!questionForm.form.valid">Отправить</button>
+  </form>
+</main>
+
+<div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+<div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>

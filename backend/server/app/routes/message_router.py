@@ -47,13 +47,18 @@ async def create_message(msg: UserMsgCreate, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    await send_email(
-        to_email=user.Email,
-        subject="Новое сообщение",
-        body=msg.Text
-    )
+    # await send_email(
+    #     to_email=user.Email,
+    #     subject="Новое сообщение",
+    #     body=msg.Text
+    # )
 
-    return db_msg
+    # Добавить StatusName вручную
+    status_name = db_msg.status.Name if db_msg.status else ""
+    return {
+        **db_msg.__dict__,
+        "StatusName": status_name
+    }
 
 @router.get("/messages/received", response_model=list[UserMsgResponse])
 async def get_received_messages(user_id: int, db: Session = Depends(get_db)):
